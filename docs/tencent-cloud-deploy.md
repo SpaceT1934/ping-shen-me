@@ -13,3 +13,11 @@
 该测试入口使用 HTTP。为使匿名会话能在 IP 加端口的地址下正常保存，服务配置将 `COOKIE_SECURE` 设为 `false`。这适合短期功能验收；有真实用户数据时应改用 HTTPS 及安全 Cookie，并完善账号与备份方案。
 
 2026-10-13：腾讯云轻量应用服务器已放行入站 TCP 8105。Mac 与 NAS 从公网访问健康接口均返回 HTTP 200，浏览器打开了开始页并显示了图片资源。测试版入口现可使用。
+
+## 从 GitHub 自动发布
+
+`.github/workflows/deploy.yml` 仅在 `main` 分支收到提交时运行：安装锁定的依赖、执行 `pnpm check`、生成仅含编译结果与生产依赖的发布包，然后用专用 SSH 密钥传到服务器。其他分支的提交不会触发发布。发布脚本位于 `infra/deploy/`，不打包 `.env`、`.data`、源码或测试文件。
+
+服务器上的专用公钥在 `ubuntu` 的 `authorized_keys` 中绑定到 `shared/receive-release.sh`，只接受 `deploy <40 位提交哈希>` 命令；密钥关闭交互终端、代理和端口转发。GitHub 仓库 Actions secrets 保存私钥 `DEPLOY_SSH_KEY` 与已核对的服务器公钥记录 `DEPLOY_KNOWN_HOSTS`。两者均不进入 Git 历史。更新接收脚本时，先人工审查，再同步到服务器的 `shared/receive-release.sh`。
+
+每次发布落在独立的 `releases/<提交哈希>` 目录；切换 `current` 后重启本项目 API，并检查数据库就绪。检查失败时自动恢复上一版本并重启。`shared/data/apple` 与 `shared/api.env` 不属于发布包。数据库迁移可能改变数据结构，因此涉及不兼容迁移的提交应先设计向前兼容方案；代码回退不等于数据库回退。Nginx 配置位于仓库供审查，修改后仍需单独检查和部署，自动流程不改动服务器上的其他站点。

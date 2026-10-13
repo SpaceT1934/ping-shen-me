@@ -1,0 +1,40 @@
+name: Check and deploy main
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ping-shen-me-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+        with:
+          version: 11.25.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - name: Package runtime files
+        run: bash infra/deploy/package-release.sh "$RUNNER_TEMP/ping-shen-me-release.tar.gz"
+      - name: Send release to Tencent Cloud
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$DEPLOY_SSH_KEY" > "$HOME/.ssh/ping-shen-me-deploy"
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/ping-shen-me-deploy" "$HOME/.ssh/known_hosts"
+          ssh -i "$HOME/.ssh/ping-shen-me-deploy" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o BatchMode=yes ubuntu@211.159.160.11 "deploy $GITHUB_SHA" < "$RUNNER_TEMP/ping-shen-me-release.tar.gz"

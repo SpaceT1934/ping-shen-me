@@ -32,7 +32,8 @@ apps/api/src/
   db/                     Drizzle 模型与迁移入口
 packages/contracts/       共享数据结构、输入和响应校验
 packages/domain/          不依赖 React、Fastify 或数据库的业务规则
-infra/                    独立 PostgreSQL 开发配置
+infra/                    本地数据库、Nginx 与发布脚本
+.github/workflows/         main 分支检查与自动发布
 docs/                     架构、业务规则与素材说明
 ```
 

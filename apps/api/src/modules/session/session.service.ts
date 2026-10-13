@@ -27,7 +27,7 @@ export function createSessionService(repository: GardenRepository, env: Env) {
         path: '/api',
         httpOnly: true,
         sameSite: 'lax',
-        secure: env.NODE_ENV === 'production',
+        secure: env.COOKIE_SECURE,
         expires,
       });
       return userId;

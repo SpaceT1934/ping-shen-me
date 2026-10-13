@@ -76,10 +76,11 @@ pnpm --filter @apple/web preview
 
 前端静态文件与后端服务分别部署。推荐同域反向代理 `/api/v1`，其他页面回退到 `index.html`。分域时，前端构建配置 `VITE_API_BASE_URL`，后端配置准确的 `CORS_ORIGIN`，并确保会话 Cookie 与 HTTPS 部署方式匹配。`vite preview` 只用于本地检查。
 
-生产环境设置 `NODE_ENV=production`、`DATA_DRIVER=postgres`、`DATABASE_URL`；容器服务可设置 `HOST=0.0.0.0`。生产 Cookie 只通过 HTTPS 发送。
+正式生产环境设置 `NODE_ENV=production`、`DATA_DRIVER=postgres`、`DATABASE_URL`；容器服务可设置 `HOST=0.0.0.0`。正式入口使用 HTTPS 和安全 Cookie。腾讯云 IP 加端口的 HTTP 测试部署单独设置 `DATA_DRIVER=pglite` 和 `COOKIE_SECURE=false`，详见部署记录。
 
 当前使用匿名会话，尚未接入手机号、短信、第三方登录和跨设备账号恢复。会话保留 180 天；清除 Cookie 会打开新花园，服务端历史数据仍保留。记录可导出为 JSON 备份，暂不提供备份重新导入界面。成长阶段阈值采用暂定规则，详见业务说明。
 
 - [架构说明](docs/architecture.md)
 - [手动业务规则](docs/manual-v1.md)
 - [UI 素材与生成提示词](docs/ui-assets.md)
+- [腾讯云测试部署](docs/tencent-cloud-deploy.md)

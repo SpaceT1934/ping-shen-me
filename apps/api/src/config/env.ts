@@ -10,6 +10,7 @@ const envSchema = z.object({
   DATABASE_URL: z.url().optional(),
   DATA_DRIVER: z.enum(['pglite', 'postgres']).optional(),
   PGLITE_DATA_DIR: z.string().optional(),
+  COOKIE_SECURE: z.enum(['true', 'false']).optional(),
 });
 
 export function readEnv(input: NodeJS.ProcessEnv = process.env) {
@@ -27,6 +28,9 @@ export function readEnv(input: NodeJS.ProcessEnv = process.env) {
   return {
     ...result.data,
     DATA_DRIVER,
+    COOKIE_SECURE: result.data.COOKIE_SECURE
+      ? result.data.COOKIE_SECURE === 'true'
+      : result.data.NODE_ENV === 'production',
     PGLITE_DATA_DIR:
       result.data.PGLITE_DATA_DIR ??
       (result.data.NODE_ENV === 'test' ? 'memory://' : './.data/apple'),

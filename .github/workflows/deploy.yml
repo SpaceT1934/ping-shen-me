@@ -25,9 +25,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
-      - name: Package runtime files
-        run: bash infra/deploy/package-release.sh "$RUNNER_TEMP/ping-shen-me-release.tar.gz"
-      - name: Send release to Tencent Cloud
+      - name: Package and deploy to Tencent Cloud
         env:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
@@ -37,4 +35,12 @@ jobs:
           printf '%s\n' "$DEPLOY_SSH_KEY" > "$HOME/.ssh/ping-shen-me-deploy"
           printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
           chmod 600 "$HOME/.ssh/ping-shen-me-deploy" "$HOME/.ssh/known_hosts"
-          ssh -i "$HOME/.ssh/ping-shen-me-deploy" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o BatchMode=yes ubuntu@211.159.160.11 "deploy $GITHUB_SHA" < "$RUNNER_TEMP/ping-shen-me-release.tar.gz"
+          ssh_args=(-i "$HOME/.ssh/ping-shen-me-deploy" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o BatchMode=yes)
+          lock_hash=$(sha256sum pnpm-lock.yaml | cut -d ' ' -f 1)
+          if ssh "${ssh_args[@]}" ubuntu@211.159.160.11 "check-deps $lock_hash"; then
+            mode=reuse
+          else
+            mode=full
+          fi
+          bash infra/deploy/package-release.sh "$RUNNER_TEMP/ping-shen-me-release.tar.gz" "$mode" "$lock_hash"
+          ssh "${ssh_args[@]}" ubuntu@211.159.160.11 "deploy $GITHUB_SHA $mode $lock_hash" < "$RUNNER_TEMP/ping-shen-me-release.tar.gz"

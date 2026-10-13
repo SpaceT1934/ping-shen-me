@@ -16,7 +16,7 @@
 
 ## 从 GitHub 自动发布
 
-`.github/workflows/deploy.yml` 仅在 `main` 分支收到提交时运行：安装锁定的依赖、执行 `pnpm check`、生成仅含编译结果与生产依赖的发布包，然后用专用 SSH 密钥传到服务器。其他分支的提交不会触发发布。发布脚本位于 `infra/deploy/`，不打包 `.env`、`.data`、源码或测试文件。
+`.github/workflows/deploy.yml` 仅在 `main` 分支收到提交时运行：安装锁定的依赖、执行 `pnpm check`，然后用专用 SSH 密钥传发布包到服务器。其他分支的提交不会触发发布。依赖锁文件未变化时，复用服务器现有的生产依赖，仅传编译结果；依赖变化时自动传完整生产依赖。发布脚本位于 `infra/deploy/`，不打包 `.env`、`.data`、源码、测试文件或网页运行时不再使用的原始 PNG。
 
 服务器上的专用公钥在 `ubuntu` 的 `authorized_keys` 中绑定到 `shared/receive-release.sh`，只接受 `deploy <40 位提交哈希>` 命令；密钥关闭交互终端、代理和端口转发。GitHub 仓库 Actions secrets 保存私钥 `DEPLOY_SSH_KEY` 与已核对的服务器公钥记录 `DEPLOY_KNOWN_HOSTS`。两者均不进入 Git 历史。更新接收脚本时，先人工审查，再同步到服务器的 `shared/receive-release.sh`。
 

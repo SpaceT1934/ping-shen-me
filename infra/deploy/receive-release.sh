@@ -5,11 +5,21 @@ base=/home/ubuntu/ping-shen-me
 service=ping-shen-me-api.service
 health=http://127.0.0.1:8105/api/v1/health/ready
 
-if [[ ! ${SSH_ORIGINAL_COMMAND:-} =~ ^deploy\ ([0-9a-f]{40})$ ]]; then
+if [[ ${SSH_ORIGINAL_COMMAND:-} =~ ^check-deps\ ([0-9a-f]{64})$ ]]; then
+  expected=${BASH_REMATCH[1]}
+  test -d "$base/current/apps/api/node_modules"
+  test -f "$base/current/.dependency-hash"
+  test "$(cat "$base/current/.dependency-hash")" = "$expected"
+  exit
+fi
+
+if [[ ! ${SSH_ORIGINAL_COMMAND:-} =~ ^deploy\ ([0-9a-f]{40})\ (full|reuse)\ ([0-9a-f]{64})$ ]]; then
   echo 'Unsupported deploy command' >&2
   exit 2
 fi
 sha=${BASH_REMATCH[1]}
+mode=${BASH_REMATCH[2]}
+lock_hash=${BASH_REMATCH[3]}
 
 exec 9>"$base/shared/.deploy.lock"
 flock 9
@@ -22,6 +32,11 @@ else
   incoming=$(mktemp -d "$base/releases/.incoming-$sha.XXXXXX")
   trap 'rm -rf "$incoming"' EXIT
   tar -xzf - -C "$incoming" --no-same-owner
+  test "$(cat "$incoming/.dependency-hash")" = "$lock_hash"
+  if [[ $mode == reuse ]]; then
+    test "$(cat "$base/current/.dependency-hash")" = "$lock_hash"
+    cp -a "$base/current/apps/api/node_modules" "$incoming/apps/api/"
+  fi
   test -f "$incoming/apps/api/dist/server.js"
   test -d "$incoming/apps/api/node_modules"
   test -d "$incoming/apps/api/drizzle"

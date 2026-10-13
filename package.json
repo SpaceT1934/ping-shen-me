@@ -1,0 +1,36 @@
+{
+  "name": "ping-shen-me",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @apple/domain... build && concurrently -k -n contracts,domain,api,web \"pnpm --filter @apple/contracts dev\" \"pnpm --filter @apple/domain dev\" \"pnpm --filter @apple/api dev\" \"pnpm --filter @apple/web dev\"",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm --filter @apple/domain... build && pnpm -r typecheck",
+    "test": "pnpm --filter @apple/domain... build && pnpm -r test",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm build",
+    "db:up": "docker compose -f infra/compose.yaml up -d",
+    "db:down": "docker compose -f infra/compose.yaml down",
+    "db:generate": "pnpm --filter @apple/api db:generate",
+    "db:migrate": "pnpm --filter @apple/api db:migrate"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.20.5",
+    "concurrently": "^10.0.6",
+    "eslint": "^10.12.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.10",
+    "typescript": "5.9.3",
+    "typescript-eslint": "^8.71.1",
+    "vitest": "4.0.18"
+  }
+}

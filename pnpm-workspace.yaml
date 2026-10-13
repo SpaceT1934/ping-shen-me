@@ -1,0 +1,10 @@
+packages:
+  - apps/*
+  - packages/*
+allowBuilds:
+  esbuild: true
+minimumReleaseAgeExclude:
+  - zod@4.6.7
+  - fastify@5.12.7
+registry: https://registry.npmjs.org/
+saveExact: true

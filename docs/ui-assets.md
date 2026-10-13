@@ -4,9 +4,9 @@
 
 ## 最终素材
 
-- `apps/web/public/assets/pixel/orchard.png`：首页、品牌页、成长和果实页面的果园背景，1024 × 1536。
-- `apps/web/public/assets/pixel/room.png`：记录、种子引导和项目详情的暖光房间背景，1024 × 1536。
-- `apps/web/public/assets/pixel/sprites-v2.png`：透明精灵图，1536 × 1024，四列两行，包含苹果角色、三色苹果、视频、书籍、公文包、日历。
+- `apps/web/public/assets/pixel/orchard.webp`：首页、品牌页、成长和果实页面的果园背景，1024 × 1536。由同目录的 PNG 原图压缩得到。
+- `apps/web/public/assets/pixel/room.webp`：记录、种子引导和项目详情的暖光房间背景，1024 × 1536。由同目录的 PNG 原图压缩得到。
+- `apps/web/public/assets/pixel/sprites-v2.webp`：无损透明精灵图，1536 × 1024，四列两行，包含苹果角色、三色苹果、视频、书籍、公文包、日历。PNG 原图保留用于后续编辑。
 - `sprites.png`：第一版图标素材，仅保留为生成过程参考；实际界面使用 v2。
 
 基础导航与操作符号采用 SVG，颜色与尺寸可随交互状态变化。生成素材会接近参考的风格，但不是参考图逐像素的复制。

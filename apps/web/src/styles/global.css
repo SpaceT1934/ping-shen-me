@@ -87,7 +87,7 @@ p {
   flex-shrink: 0;
   width: var(--sprite-size);
   height: calc(var(--sprite-size) * 1.333333);
-  background: url('/assets/pixel/sprites-v2.png') no-repeat;
+  background: url('/assets/pixel/sprites-v2.webp') no-repeat;
   background-size: 400% 200%;
   image-rendering: pixelated;
   vertical-align: middle;
@@ -126,7 +126,7 @@ p {
 .garden-home {
   min-height: calc(100dvh - 78px);
   position: relative;
-  background: #7cbde9 url('/assets/pixel/orchard.png') center center / cover no-repeat;
+  background: #7cbde9 url('/assets/pixel/orchard.webp') center center / cover no-repeat;
 }
 .garden-header {
   position: absolute;
@@ -521,7 +521,7 @@ p {
   line-height: 1.8;
 }
 .room-banner {
-  background: #b57c58 url('/assets/pixel/room.png') center 47% / cover;
+  background: #b57c58 url('/assets/pixel/room.webp') center 47% / cover;
   padding: 0 20px;
   height: 220px;
 }
@@ -719,7 +719,7 @@ input[type='checkbox'] {
 .seed-scene {
   height: 355px;
   position: relative;
-  background: #e5ba92 url('/assets/pixel/room.png') center 70% / cover;
+  background: #e5ba92 url('/assets/pixel/room.webp') center 70% / cover;
   padding: 0 20px;
 }
 .record-bubble {
@@ -879,7 +879,7 @@ input::placeholder {
   overflow: hidden;
   background:
     linear-gradient(#31466750, #21344f89),
-    url('/assets/pixel/orchard.png') center 24% / cover;
+    url('/assets/pixel/orchard.webp') center 24% / cover;
 }
 .report-banner p {
   position: absolute;
@@ -1060,7 +1060,7 @@ input::placeholder {
 .fruit-scene {
   min-height: 100dvh;
   position: relative;
-  background: #8ec2df url('/assets/pixel/orchard.png') center / cover;
+  background: #8ec2df url('/assets/pixel/orchard.webp') center / cover;
 }
 .welcome-skip {
   position: absolute;
@@ -1400,12 +1400,12 @@ input::placeholder {
 .welcome-scene,
 .growth-scene,
 .fruit-scene {
-  --ambient-art: url('/assets/pixel/orchard.png');
+  --ambient-art: url('/assets/pixel/orchard.webp');
   --ambient-position: center center;
 }
 .seed-scene,
 .record-scene {
-  --ambient-art: url('/assets/pixel/room.png');
+  --ambient-art: url('/assets/pixel/room.webp');
   --ambient-position: center 70%;
 }
 .ambient-scene {
@@ -1575,7 +1575,7 @@ input::placeholder {
 }
 .room-banner {
   position: relative;
-  --ambient-art: url('/assets/pixel/room.png');
+  --ambient-art: url('/assets/pixel/room.webp');
   --ambient-position: center 47%;
 }
 .room-banner > .page-heading,

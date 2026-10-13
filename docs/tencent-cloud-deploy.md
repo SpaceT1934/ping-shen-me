@@ -20,4 +20,4 @@
 
 服务器上的专用公钥在 `ubuntu` 的 `authorized_keys` 中绑定到 `shared/receive-release.sh`，只接受 `deploy <40 位提交哈希>` 命令；密钥关闭交互终端、代理和端口转发。GitHub 仓库 Actions secrets 保存私钥 `DEPLOY_SSH_KEY` 与已核对的服务器公钥记录 `DEPLOY_KNOWN_HOSTS`。两者均不进入 Git 历史。更新接收脚本时，先人工审查，再同步到服务器的 `shared/receive-release.sh`。
 
-每次发布落在独立的 `releases/<提交哈希>` 目录；切换 `current` 后重启本项目 API，并检查数据库就绪。检查失败时自动恢复上一版本并重启。`shared/data/apple` 与 `shared/api.env` 不属于发布包。数据库迁移可能改变数据结构，因此涉及不兼容迁移的提交应先设计向前兼容方案；代码回退不等于数据库回退。Nginx 配置位于仓库供审查，修改后仍需单独检查和部署，自动流程不改动服务器上的其他站点。
+每次发布落在独立的 `releases/<提交哈希>` 目录；切换 `current` 后重启本项目 API，并检查数据库、页面与图片是否可访问。检查失败时自动恢复上一版本并重启。`shared/data/apple` 与 `shared/api.env` 不属于发布包。数据库迁移可能改变数据结构，因此涉及不兼容迁移的提交应先设计向前兼容方案；代码回退不等于数据库回退。Nginx 配置位于仓库供审查，修改后仍需单独检查和部署，自动流程不改动服务器上的其他站点。

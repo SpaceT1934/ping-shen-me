@@ -26,6 +26,8 @@ else
   test -d "$incoming/apps/api/node_modules"
   test -d "$incoming/apps/api/drizzle"
   test -f "$incoming/apps/web/dist/index.html"
+  # mktemp creates a 0700 directory; Nginx must be able to traverse the release root.
+  chmod 755 "$incoming"
   mv "$incoming" "$release"
   trap - EXIT
 fi
@@ -37,7 +39,9 @@ mv -Tf "$base/.current-next" "$base/current"
 healthy=false
 if sudo -n systemctl restart "$service"; then
   for _ in $(seq 1 20); do
-    if curl -fsS --max-time 3 "$health" | grep -q '"status":"ok"'; then
+    if curl -fsS --max-time 3 "$health" | grep -q '"status":"ok"' \
+      && curl -fsS --max-time 3 -o /dev/null http://127.0.0.1:8105/welcome \
+      && curl -fsS --max-time 3 -o /dev/null http://127.0.0.1:8105/assets/pixel/orchard.webp; then
       healthy=true
       break
     fi

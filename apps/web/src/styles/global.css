@@ -1940,15 +1940,38 @@ input::placeholder {
 .speech-input {
   margin: 12px 0;
 }
-.audio-upload {
-  font-size: 13px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.voice-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 48px;
+  padding: 11px 20px;
+  border: 2px solid #998057;
+  border-radius: 15px;
+  background: #f3edd2;
+  color: #59452f;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
 }
-.audio-upload input {
-  max-width: 200px;
-  font-size: 12px;
+.voice-button.is-recording {
+  border-color: #b56d56;
+  background: #fbe0d4;
+  color: #934b37;
+}
+.voice-button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.voice-cancel {
+  padding: 10px;
+  border: 0;
+  background: transparent;
+  color: #80694f;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
 }
 .ai-seed {
   margin-bottom: 12px;

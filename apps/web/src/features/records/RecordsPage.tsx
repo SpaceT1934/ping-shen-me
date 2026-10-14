@@ -7,6 +7,7 @@ import { useGarden } from '../../app/garden-context';
 import { PageHeading } from '../../components/PageHeading';
 import { LineIcon, PixelIcon } from '../../components/PixelIcon';
 import { AmbientScene, LivingMascot } from '../../components/AmbientScene';
+import { createUuid } from '../../lib/uuid';
 import { EntryList } from '../projects/components/EntryList';
 type Draft = ManualDraft & { key: string; selected: boolean };
 const draftKey = 'apple-manual-draft-v2';
@@ -30,7 +31,7 @@ function restoreDraft(): { text: string; drafts: Draft[]; confirming: boolean } 
   return { text: '', drafts: [], confirming: false };
 }
 const blankDraft = (content = ''): Draft => ({
-  key: crypto.randomUUID(),
+  key: createUuid(),
   selected: true,
   content,
   projectId: null,

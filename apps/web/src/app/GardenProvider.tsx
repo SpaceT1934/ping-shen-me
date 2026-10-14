@@ -4,6 +4,7 @@ import type { Command, GardenState } from '@apple/contracts';
 import { gardenApi, initializeGarden } from '../lib/garden/garden-api';
 import { createGardenView } from '../lib/garden/view-model';
 import { ApiRequestError } from '../lib/api';
+import { createUuid } from '../lib/uuid';
 import { GardenContext } from './garden-context';
 export function GardenProvider({ children }: { children: ReactNode }) {
   const client = useQueryClient();
@@ -28,7 +29,7 @@ export function GardenProvider({ children }: { children: ReactNode }) {
     if (!current) return null;
     try {
       return await mutation.mutateAsync({
-        operationId: crypto.randomUUID(),
+        operationId: createUuid(),
         expectedVersion: current.version,
         command,
       });

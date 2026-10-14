@@ -8,6 +8,7 @@ import {
   type GardenState,
 } from '@apple/contracts';
 import { apiRequest } from '../api';
+import { createUuid } from '../uuid';
 export const gardenApi = {
   report: (period: string) =>
     apiRequest(`/reports?period=${encodeURIComponent(period)}`, reportSchema),
@@ -41,7 +42,7 @@ export async function initializeGarden(): Promise<GardenState> {
   }
   if (!legacy) return state;
   const response = await gardenApi.mutate({
-    operationId: crypto.randomUUID(),
+    operationId: createUuid(),
     expectedVersion: state.version,
     command: { type: 'import.legacy', legacy, onboardingCompleted },
   });

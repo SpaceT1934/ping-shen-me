@@ -2,15 +2,19 @@
 
 部署位置：`/home/ubuntu/ping-shen-me`，与服务器上其他项目分开。`current` 指向当前版本，`releases/` 放应用文件，`shared/data/apple` 保存 PGlite 数据，`shared/api.env` 保存服务配置，`runtime/` 放本项目专用 Node 22。更换版本时应保留 `shared/`。
 
-- 页面入口：`http://211.159.160.11:8105/`（需要腾讯云入站 TCP 8105 放行）。
+- 页面入口：`https://211.159.160.11:8105/`（需要腾讯云入站 TCP 8105 放行）。
 - API：Nginx 将同一入口下的 `/api/` 转给本机 `127.0.0.1:8106`，API 端口不对公网开放。
 - 进程：`ping-shen-me-api.service`，由 systemd 管理。静态页面由 Nginx 的独立 `ping-shen-me-port` 站点提供，不使用现有域名。
 - 页面素材使用 WebP；独立 Nginx 站点对脚本、样式和 JSON 开启 gzip。对应配置存放在 `infra/nginx/ping-shen-me.conf`。
 - 数据：匿名会话和花园数据位于服务器的 `shared/data/apple`；本机开发数据没有迁移到测试服。GitHub 仓库只备份代码和素材，不备份服务端用户数据。
 
-维护时在服务器上运行 `sudo systemctl status ping-shen-me-api.service`，检查 `curl http://127.0.0.1:8105/api/v1/health/ready`。修改 Nginx 配置后先运行 `sudo nginx -t`，再重新加载 Nginx。
+维护时在服务器上运行 `sudo systemctl status ping-shen-me-api.service`，检查 `curl --resolve 211.159.160.11:8105:127.0.0.1 https://211.159.160.11:8105/api/v1/health/ready`。修改 Nginx 配置后先运行 `sudo nginx -t`，再重新加载 Nginx。
 
-该测试入口使用 HTTP。为使匿名会话能在 IP 加端口的地址下正常保存，服务配置将 `COOKIE_SECURE` 设为 `false`。这适合短期功能验收；有真实用户数据时应改用 HTTPS 及安全 Cookie，并完善账号与备份方案。
+2026-10-14：8105 端口已启用 HTTPS，旧 HTTP 链接以 308 跳转到相同路径的 HTTPS 地址。使用服务器现有的 Let’s Encrypt IP 证书，没有调整其他网站的域名、DNS 或端口。业务服务配置为 `CORS_ORIGIN=https://211.159.160.11:8105` 和 `COOKIE_SECURE=true`，新会话 Cookie 含 Secure 标记。匿名会话 Cookie 按主机保存，协议切换不会主动新建或删除已有用户数据。
+
+IP 证书路径为 `/etc/letsencrypt/live/211.159.160.11/`。证书短期有效，依赖 `snap.certbot.renew.timer` 自动续期。原证书已过期，原因是 HTTP 验证目录没有被当前 80 端口站点提供；已将该 IP 证书的 webroot 改为 `/var/www/designer-portfolio`，通过现有静态路径提供临时 ACME 验证文件，无需修改该网站配置。续期部署钩子检查并重新加载 Nginx；真实签发和 `certbot renew --cert-name 211.159.160.11 --dry-run --no-random-sleep-on-renew --run-deploy-hooks` 均已成功。该 IP 证书同时被服务器其他 IP 站点引用，不要删除或停用其统一续期任务。
+
+HTTPS 与 HTTP 属于不同浏览器存储来源，旧页面中尚未提交的本地草稿需要在原页面保存或自行复制；已保存的服务端数据不受影响。
 
 2026-10-13：腾讯云轻量应用服务器已放行入站 TCP 8105。Mac 与 NAS 从公网访问健康接口均返回 HTTP 200，浏览器打开了开始页并显示了图片资源。测试版入口现可使用。
 
@@ -60,11 +64,13 @@ bash /home/ubuntu/ping-shen-me/current/infra/deploy/setup-ai.sh
 
 ```bash
 sudo systemctl status ping-shen-me-ai.service --no-pager
-curl -fsS http://127.0.0.1:8105/api/v1/health/ready
+curl --resolve 211.159.160.11:8105:127.0.0.1 -fsS https://211.159.160.11:8105/api/v1/health/ready
 ```
 
 成功响应的 `data` 应含 `database:"connected"` 和 `ai_service:"connected"`。这确认服务进程、内部认证及模型配置已就绪；不代表真实供应商调用已成功，需要最后各做一次简短文字分析和音频转写。查看错误时使用 `journalctl -u ping-shen-me-ai.service -n 50 --no-pager`，分享日志前检查有无敏感信息。
 
 ## 队友访问与网页录音
 
-部署完成后分享现有页面入口即可，不依赖开发者电脑继续开机。当前 HTTP 地址可体验文字和音频文件上传。公网浏览器直接使用麦克风需要 HTTPS；待同学配置域名与证书后，更新业务服务的 `CORS_ORIGIN` 和 `COOKIE_SECURE=true` 并重启。HTTPS 站点应继续将 `/api/` 转到本机 API，Python 端口始终保持不对公网开放。Nginx 同时设 `client_max_body_size 7m`，确保 5 MB 音频经 base64 编码后能正常上传。
+分享 `https://211.159.160.11:8105/welcome` 即可，不依赖开发者电脑继续开机。项目创建和记录页的“点击说话”在 HTTPS 入口可申请麦克风权限，再次点击结束后转成可编辑文字。浏览器拒绝权限时保留文字输入；未使用真实用户麦克风做自动验证。
+
+HTTPS 站点继续将 `/api/` 转到本机 API，Python 端口始终保持不对公网开放。Nginx 的 `client_max_body_size 7m` 可接收 base64 音频。自动发布通过 `--resolve` 连本机 Nginx，同时验证公网 IP 证书、健康 JSON、页面和 WebP 文件，避免把 HTTP 重定向误判为服务就绪。

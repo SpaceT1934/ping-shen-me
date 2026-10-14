@@ -3,7 +3,10 @@ set -euo pipefail
 
 base=/home/ubuntu/ping-shen-me
 service=ping-shen-me-api.service
-health=http://127.0.0.1:8105/api/v1/health/ready
+site=https://211.159.160.11:8105
+health=$site/api/v1/health/ready
+# Connect locally while verifying the public IP certificate and HTTPS response.
+tls_check=(-fsS --max-time 3 --resolve 211.159.160.11:8105:127.0.0.1)
 
 if [[ ${SSH_ORIGINAL_COMMAND:-} =~ ^check-deps\ ([0-9a-f]{64})$ ]]; then
   expected=${BASH_REMATCH[1]}
@@ -64,9 +67,9 @@ if [[ -f "$base/shared/.ai-enabled" ]]; then
 fi
 if [[ $services_started == true ]] && sudo -n systemctl restart "$service"; then
   for _ in $(seq 1 20); do
-    if curl -fsS --max-time 3 "$health" | grep -q '"status":"ok"' \
-      && curl -fsS --max-time 3 -o /dev/null http://127.0.0.1:8105/welcome \
-      && curl -fsS --max-time 3 -o /dev/null http://127.0.0.1:8105/assets/pixel/orchard.webp; then
+    if curl "${tls_check[@]}" "$health" | grep -q '"status":"ok"' \
+      && curl "${tls_check[@]}" -o /dev/null "$site/welcome" \
+      && curl "${tls_check[@]}" -o /dev/null "$site/assets/pixel/orchard.webp"; then
       healthy=true
       break
     fi

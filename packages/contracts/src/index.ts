@@ -7,11 +7,14 @@ export const healthResponseSchema = z.object({
 export type HealthResponse = z.infer<typeof healthResponseSchema>;
 
 export const apiErrorSchema = z.object({
-  error: z.object({
-    code: z.string(),
-    message: z.string(),
-    requestId: z.string(),
-  }),
+  code: z.string(),
+  message: z.string(),
+  request_id: z.string(),
+  details: z
+    .array(
+      z.object({ client_item_id: z.string().optional(), field: z.string(), message: z.string() }),
+    )
+    .optional(),
 });
 export type ApiError = z.infer<typeof apiErrorSchema>;
 
@@ -29,3 +32,5 @@ export const recordDraftSchema = z.object({
 export type RecordDraft = z.infer<typeof recordDraftSchema>;
 
 export * from './garden.js';
+
+export * from './http.js';

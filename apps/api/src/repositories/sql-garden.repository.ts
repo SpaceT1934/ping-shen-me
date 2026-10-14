@@ -7,8 +7,8 @@ import pg from 'pg';
 import { mkdir } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { gardenSchema } from '@apple/contracts';
-import { emptyGarden } from '@apple/domain';
+import { gardenSchema, type GardenState } from '@apple/contracts';
+import { emptyGarden, DomainError } from '@apple/domain';
 import type { Env } from '../config/env.js';
 import type { GardenRepository } from './garden.repository.js';
 
@@ -21,6 +21,41 @@ type Database = {
   transaction: <T>(fn: (tx: SqlClient) => Promise<T>) => Promise<T>;
   close: () => Promise<void>;
 };
+async function guardIdentities(
+  tx: SqlClient,
+  userId: string,
+  before: GardenState,
+  after: GardenState,
+) {
+  const oldIds = new Set(
+    [...before.records, ...before.results, ...before.growthEvents].map((item) => item.id),
+  );
+  const links = [
+    ...after.records
+      .filter((item) => item.sourceTaskId && !oldIds.has(item.id))
+      .map((item) => ({ kind: 'task_action', source_id: item.sourceTaskId!, target_id: item.id })),
+    ...after.results
+      .filter((item) => !oldIds.has(item.id))
+      .map((item) => ({ kind: 'goal_result', source_id: item.goalId, target_id: item.id })),
+    ...after.growthEvents
+      .filter((item) => !oldIds.has(item.id))
+      .map((item) => ({ kind: 'growth_action', source_id: item.actionId, target_id: item.id })),
+  ];
+  if (!links.length) return;
+  // A source may only ever bind to one entity, including after soft deletion.
+  for (const link of links) {
+    await tx.query(
+      'INSERT INTO garden_entity_links (user_id, kind, source_id, target_id) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING',
+      [userId, link.kind, link.source_id, link.target_id],
+    );
+    const existing = await tx.query<{ target_id: string }>(
+      'SELECT target_id FROM garden_entity_links WHERE user_id = $1 AND kind = $2 AND source_id = $3',
+      [userId, link.kind, link.source_id],
+    );
+    if (existing.rows[0]?.target_id !== link.target_id)
+      throw new DomainError('ENTITY_CONFLICT', '任务行动或目标成果已存在，不能重复创建', 409);
+  }
+}
 export async function createGardenRepository(env: Env): Promise<GardenRepository> {
   const migrationsFolder = fileURLToPath(new URL('../../drizzle', import.meta.url));
   let database: Database;
@@ -87,7 +122,9 @@ export async function createGardenRepository(env: Env): Promise<GardenRepository
           [userId],
         );
         if (!rows.rows[0]) throw new Error('用户花园不存在');
-        const { state, value } = transform(gardenSchema.parse(rows.rows[0].state));
+        const previousState = gardenSchema.parse(rows.rows[0].state);
+        const { state, value } = transform(previousState);
+        await guardIdentities(tx, userId, previousState, state);
         await tx.query(
           'UPDATE garden_snapshots SET state = $2::jsonb, updated_at = now() WHERE user_id = $1',
           [userId, JSON.stringify(state)],
@@ -95,6 +132,40 @@ export async function createGardenRepository(env: Env): Promise<GardenRepository
         await tx.query(
           'UPDATE users SET onboarding_completed = $2, updated_at = now() WHERE id = $1',
           [userId, state.onboardingCompleted],
+        );
+        return value;
+      });
+    },
+    async transactIdempotent(userId, key, fingerprint, transform) {
+      return database.transaction(async (tx) => {
+        const rows = await tx.query<{ state: unknown }>(
+          'SELECT state FROM garden_snapshots WHERE user_id = $1 FOR UPDATE',
+          [userId],
+        );
+        if (!rows.rows[0]) throw new Error('用户花园不存在');
+        const previous = await tx.query<{ fingerprint: string; response: unknown }>(
+          'SELECT fingerprint, response FROM api_operations WHERE user_id = $1 AND key = $2',
+          [userId, key],
+        );
+        if (previous.rows[0]) {
+          if (previous.rows[0].fingerprint !== fingerprint)
+            throw new DomainError('IDEMPOTENCY_CONFLICT', '同一提交编号不能用于不同请求', 409);
+          return previous.rows[0].response as ReturnType<typeof transform>['value'];
+        }
+        const previousState = gardenSchema.parse(rows.rows[0].state);
+        const { state, value } = transform(previousState);
+        await guardIdentities(tx, userId, previousState, state);
+        await tx.query(
+          'UPDATE garden_snapshots SET state = $2::jsonb, updated_at = now() WHERE user_id = $1',
+          [userId, JSON.stringify(state)],
+        );
+        await tx.query(
+          'UPDATE users SET onboarding_completed = $2, updated_at = now() WHERE id = $1',
+          [userId, state.onboardingCompleted],
+        );
+        await tx.query(
+          'INSERT INTO api_operations (user_id, key, fingerprint, response) VALUES ($1, $2, $3, $4::jsonb)',
+          [userId, key, fingerprint, JSON.stringify(value)],
         );
         return value;
       });

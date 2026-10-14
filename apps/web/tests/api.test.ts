@@ -8,7 +8,7 @@ it('sends requests when AbortSignal.timeout is unavailable', async () => {
   const original = Object.getOwnPropertyDescriptor(AbortSignal, 'timeout');
   Object.defineProperty(AbortSignal, 'timeout', { configurable: true, value: undefined });
   const fetch = vi.fn().mockResolvedValue(
-    new Response(JSON.stringify({ saved: true }), {
+    new Response(JSON.stringify({ code: 'OK', data: { saved: true }, request_id: 'test' }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     }),

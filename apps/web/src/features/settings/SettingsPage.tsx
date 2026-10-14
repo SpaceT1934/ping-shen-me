@@ -1,20 +1,31 @@
+import { useState } from 'react';
+import { gardenApi } from '../../lib/garden/garden-api';
 import { Link } from 'react-router-dom';
 import { useGarden } from '../../app/garden-context';
 import { LineIcon, PixelIcon } from '../../components/PixelIcon';
 import { PageHeading } from '../../components/PageHeading';
 export function SettingsPage() {
-  const { projects, entries, results, state } = useGarden();
-  const exportData = () => {
-    const url = URL.createObjectURL(
-      new Blob([JSON.stringify({ ...state, operations: [] }, null, 2)], {
-        type: 'application/json',
-      }),
-    );
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `苹什么_记录_${new Date().toISOString().slice(0, 10)}.json`;
-    link.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  const { projects, entries, results } = useGarden();
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState('');
+  const exportData = async () => {
+    setExporting(true);
+    setExportError('');
+    try {
+      const data = await gardenApi.exportData();
+      const url = URL.createObjectURL(
+        new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }),
+      );
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `苹什么_记录_${new Date().toISOString().slice(0, 10)}.json`;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch {
+      setExportError('导出暂时失败，请稍后重试。');
+    } finally {
+      setExporting(false);
+    }
   };
   return (
     <div className="paper-page settings-page">
@@ -63,9 +74,14 @@ export function SettingsPage() {
           当前还没有手机号或第三方登录。换浏览器、清除 Cookie
           后会进入新花园；服务端历史数据仍保留。建议定期导出记录。
         </p>
-        <button className="outline-button full-width" onClick={exportData}>
-          导出我的记录
+        <button
+          className="outline-button full-width"
+          disabled={exporting}
+          onClick={() => void exportData()}
+        >
+          {exporting ? '正在导出…' : '导出我的记录'}
         </button>
+        {exportError && <p role="alert">{exportError}</p>}
         <p className="small-print">
           成长阶段暂采用：刚种下、萌芽、枝叶舒展、茂盛。每条有效行动等权累计。
         </p>

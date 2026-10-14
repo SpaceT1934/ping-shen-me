@@ -1,11 +1,12 @@
 import { apiErrorSchema } from '@apple/contracts';
-import type { z } from 'zod';
+import { z } from 'zod';
 const apiBase = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '');
 export class ApiRequestError extends Error {
   constructor(
     message: string,
     public status: number,
     public code: string,
+    public details?: { client_item_id?: string; field: string; message: string }[],
   ) {
     super(message);
   }
@@ -34,11 +35,14 @@ export async function apiRequest<T>(
     const body: unknown = await response.json().catch(() => null);
     const error = apiErrorSchema.safeParse(body);
     throw new ApiRequestError(
-      error.success ? error.data.error.message : `请求失败（${response.status}）`,
+      error.success ? error.data.message : `请求失败（${response.status}）`,
       response.status,
-      error.success ? error.data.error.code : 'HTTP_ERROR',
+      error.success ? error.data.code : 'HTTP_ERROR',
+      error.success ? error.data.details : undefined,
     );
   }
-  return schema.parse(await response.json());
+  const envelope: unknown = await response.json();
+  return z.object({ code: z.literal('OK'), data: schema, request_id: z.string() }).parse(envelope)
+    .data;
 }
 export const apiGet = <T>(path: string, schema: z.ZodType<T>) => apiRequest(path, schema);

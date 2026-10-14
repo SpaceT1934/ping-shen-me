@@ -74,7 +74,7 @@ export function GoalCard({ project }: { project: ProjectView }) {
               )}
         </>
       )}
-      {project.status === 'active' && (
+      {project.status === 'active' && (!project.goalId || project.goalCompleted) && (
         <>
           <button className="text-button" onClick={() => setEditing(!editing)}>
             {editing
@@ -96,9 +96,7 @@ export function GoalCard({ project }: { project: ProjectView }) {
               }}
             >
               <GoalFields value={nextGoal} onChange={setNextGoal} />
-              {project.goalId && !project.goalCompleted && (
-                <p className="small-print">保存会将当前目标转为历史目标，已有记录保留。</p>
-              )}
+
               <button
                 className="outline-button full-width"
                 disabled={busy || !nextGoal.title.trim()}

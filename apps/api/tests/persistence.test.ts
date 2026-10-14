@@ -30,10 +30,24 @@ it('本地数据库关闭并重新打开后，数据和会话仍在', async () =
       );
       return { state: result.state, value: null };
     });
+    await repository.transactIdempotent(userId, 'saved-key', 'fingerprint', (state) => ({
+      state,
+      value: { batch_id: 'original-result', saved_items: ['record-1'] },
+    }));
     await repository.close();
     repository = await createGardenRepository(env);
     expect((await repository.read(userId)).onboardingCompleted).toBe(true);
     expect(await repository.resolveSession('a'.repeat(64))).toBe(userId);
+    const replay = await repository.transactIdempotent(userId, 'saved-key', 'fingerprint', () => {
+      throw new Error('持久化重试不应重新执行业务');
+    });
+    expect(replay).toEqual({ batch_id: 'original-result', saved_items: ['record-1'] });
+    await expect(
+      repository.transactIdempotent(userId, 'saved-key', 'different', (state) => ({
+        state,
+        value: null,
+      })),
+    ).rejects.toThrow('同一提交编号');
   } finally {
     await repository.close();
     await rm(temporary, { recursive: true, force: true });

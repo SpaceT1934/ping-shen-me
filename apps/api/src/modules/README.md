@@ -1,16 +1,9 @@
 # 后端模块
 
-`session` 处理匿名身份，`garden` 处理手动命令与报告，`health` 处理基础就绪检查。路由只校验参数、解析会话和调用应用服务；规则集中在 `packages/domain`，SQL 集中在 `repositories`。
+session 处理匿名身份；health 处理存活与数据库就绪；garden 保留跨项目、任务、行动、成长和成果一致提交的聚合事务边界。
 
-Garden 是当前手动业务的聚合事务边界：项目、目标、任务、记录、成长、成果必须一致提交。暂不拆成互相调用的独立服务，以免跨模块部分成功。后续实体数量变大时，可在该事务边界内部增加专用仓库和查询投影。
+对外资源路由分别位于 project.routes.ts、record.routes.ts、task.routes.ts、goal.routes.ts、result.routes.ts、report.routes.ts。garden.routes.ts 组合资源路由并处理 bootstrap、session、引导和旧原型导入。http-utils.ts 处理通用分页、对象查找和幂等头；http-presenters.ts 负责 snake_case DTO、成长反馈与报告；resource.service.ts 组合领域规则和事务。
 
-| 接口                           | 用途                   |
-| ------------------------------ | ---------------------- |
-| POST /api/v1/session           | 创建或复用匿名会话     |
-| GET /api/v1/garden             | 读取当前用户花园       |
-| POST /api/v1/garden/commands   | 校验并原子执行手动命令 |
-| GET /api/v1/reports?period=7天 | 读取真实周期统计       |
-| GET /api/v1/health             | 服务存活               |
-| GET /api/v1/health/ready       | 数据库连通性           |
+契约在 packages/contracts/src/http.ts。旧 garden/commands HTTP 入口已移除，内部命令仅用于领域层。SQL 与持久化幂等记录集中在 repositories；数据库结构与升级集中在 db/schema.ts、drizzle。
 
-契约定义在 `packages/contracts/src/garden.ts`。命令类型包括项目创建与修改、状态更新、目标创建与进度、任务管理、手动批量记录、记录纠错与删除、成果收获、首次引导及旧原型迁移。
+完整路径、请求、响应和扩展功能见 [接口约定 V0.2](../../../../docs/苹什么_前后端接口约定_V0.2.md)。

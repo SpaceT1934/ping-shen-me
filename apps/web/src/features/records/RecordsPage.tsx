@@ -70,8 +70,7 @@ export function RecordsPage() {
     selected.every(
       (item) =>
         item.content.trim() &&
-        ((item.type !== 'task' && item.type !== 'goal') ||
-          (item.projectId && item.content.length <= 200)),
+        (item.type !== 'task' || (item.projectId && item.content.length <= 200)),
     );
   const save = async () => {
     if (!valid) return;
@@ -87,6 +86,7 @@ export function RecordsPage() {
         target: item.target,
         unit: item.unit,
       })),
+      text,
     );
     if (!feedback) return;
     setText('');
@@ -119,11 +119,6 @@ export function RecordsPage() {
         <div className="draft-list">
           {drafts.map((item) => {
             const project = projects.find((project) => project.id === item.projectId);
-            const contributes =
-              item.type === 'action' &&
-              project?.goalId &&
-              !project.goalCompleted &&
-              project.goalType !== 'manual';
             return (
               <article className={`draft-card ${project?.color || 'peach'}`} key={item.key}>
                 <div className="draft-card-top">
@@ -173,7 +168,7 @@ export function RecordsPage() {
                   value={item.content}
                   onChange={(event) => update(item.key, { content: event.target.value })}
                   rows={2}
-                  maxLength={item.type === 'task' || item.type === 'goal' ? 200 : 2000}
+                  maxLength={item.type === 'task' ? 200 : 2000}
                 />
                 <div className="draft-extras">
                   <label>
@@ -193,62 +188,13 @@ export function RecordsPage() {
                       }
                     />
                   </label>
-                  {contributes && (
-                    <label>
-                      推进目标（不推进填 0）
-                      <input
-                        aria-label="目标贡献"
-                        type="number"
-                        min="0"
-                        step={project.goalType === 'count' ? 1 : 0.1}
-                        value={item.contribution}
-                        onChange={(event) =>
-                          update(item.key, { contribution: Number(event.target.value) })
-                        }
-                      />
-                    </label>
-                  )}
                   {item.type === 'goal' && (
-                    <>
-                      <label>
-                        目标方式
-                        <select
-                          aria-label="目标方式"
-                          value={item.goalType}
-                          onChange={(event) => {
-                            const goalType = event.target.value as Draft['goalType'];
-                            update(item.key, {
-                              goalType,
-                              target:
-                                goalType === 'percentage' ? 100 : goalType === 'manual' ? 1 : 10,
-                            });
-                          }}
-                        >
-                          <option value="manual">手动完成</option>
-                          <option value="count">数量目标</option>
-                          <option value="percentage">百分比</option>
-                        </select>
-                      </label>
-                      {item.goalType === 'count' && (
-                        <label>
-                          目标数量
-                          <input
-                            aria-label="目标数量"
-                            type="number"
-                            min="1"
-                            step="1"
-                            value={item.target}
-                            onChange={(event) =>
-                              update(item.key, { target: Number(event.target.value) })
-                            }
-                          />
-                        </label>
-                      )}
-                      <p className="small-print">保存会替换这个方向的当前目标，旧目标转为历史。</p>
-                    </>
+                    <p className="small-print">
+                      保存为目标建议，不会替换当前目标。设置目标请到项目详情。
+                    </p>
                   )}
-                  {(item.type === 'task' || item.type === 'goal') && !item.projectId && (
-                    <p className="small-print">计划和目标需要选择一个项目。</p>
+                  {item.type === 'task' && !item.projectId && (
+                    <p className="small-print">计划需要选择一个项目。</p>
                   )}
                 </div>
               </article>

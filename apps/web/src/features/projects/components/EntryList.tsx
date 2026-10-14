@@ -7,23 +7,13 @@ function EntryEditor({ entry, close }: { entry: Entry; close: () => void }) {
   const [date, setDate] = useState(entry.date);
   const [projectId, setProjectId] = useState(entry.projectId || '');
   const [type, setType] = useState(entry.type);
-  const [contribution, setContribution] = useState(entry.contribution);
+
   return (
     <form
       className="editor-form"
       onSubmit={async (event) => {
         event.preventDefault();
-        if (
-          await editEntry(
-            entry.id,
-            content,
-            projectId || null,
-            type,
-            date,
-            type === 'action' ? contribution : 0,
-          )
-        )
-          close();
+        if (await editEntry(entry.id, content, projectId || null, type, date, 0)) close();
       }}
     >
       <label>
@@ -46,6 +36,7 @@ function EntryEditor({ entry, close }: { entry: Entry; close: () => void }) {
           >
             <option value="action">行动</option>
             <option value="idea">灵感</option>
+            <option value="goal">目标建议</option>
           </select>
         </label>
         <label>
@@ -66,7 +57,6 @@ function EntryEditor({ entry, close }: { entry: Entry; close: () => void }) {
           value={projectId}
           onChange={(event) => {
             setProjectId(event.target.value);
-            setContribution(0);
           }}
         >
           <option value="">未归类</option>
@@ -79,18 +69,6 @@ function EntryEditor({ entry, close }: { entry: Entry; close: () => void }) {
             ))}
         </select>
       </label>
-      {type === 'action' && (
-        <label>
-          贡献目标数量（不推进填 0）
-          <input
-            aria-label="编辑目标贡献"
-            type="number"
-            min="0"
-            value={contribution}
-            onChange={(event) => setContribution(Number(event.target.value))}
-          />
-        </label>
-      )}
       <div className="form-actions">
         <button className="outline-button" disabled={busy || !content.trim()}>
           保存修改
@@ -102,7 +80,13 @@ function EntryEditor({ entry, close }: { entry: Entry; close: () => void }) {
     </form>
   );
 }
-export function EntryList({ projectId, type }: { projectId?: string; type?: 'action' | 'idea' }) {
+export function EntryList({
+  projectId,
+  type,
+}: {
+  projectId?: string;
+  type?: 'action' | 'idea' | 'goal';
+}) {
   const { entries, projects, busy, deleteEntry } = useGarden();
   const [editing, setEditing] = useState<string | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
@@ -120,7 +104,7 @@ export function EntryList({ projectId, type }: { projectId?: string; type?: 'act
               <small>
                 {item.date} ·{' '}
                 {projects.find((project) => project.id === item.projectId)?.name || '未归类'} ·{' '}
-                {item.type === 'action' ? '行动' : '灵感'}
+                {item.type === 'action' ? '行动' : item.type === 'goal' ? '目标建议' : '灵感'}
                 {item.sourceTaskId ? ' · 来自任务' : ''}
               </small>
             </div>

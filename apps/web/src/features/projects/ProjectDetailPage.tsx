@@ -21,11 +21,12 @@ export function ProjectDetailPage() {
         <Link to="/projects">返回项目列表</Link>
       </div>
     );
-  const labels = ['计划', '行动', '灵感', '成果'];
+  const labels = ['计划', '行动', '灵感', '目标建议', '成果'];
   const counts = [
     tasks.filter((item) => item.projectId === id).length,
     entries.filter((item) => item.projectId === id && item.type === 'action').length,
     entries.filter((item) => item.projectId === id && item.type === 'idea').length,
+    entries.filter((item) => item.projectId === id && item.type === 'goal').length,
     results.filter((item) => item.projectId === id).length,
   ];
   return (
@@ -65,8 +66,11 @@ export function ProjectDetailPage() {
         {tab === '计划' && (
           <TaskList projectId={project.id} writable={project.status === 'active'} />
         )}
-        {(tab === '行动' || tab === '灵感') && (
-          <EntryList projectId={project.id} type={tab === '行动' ? 'action' : 'idea'} />
+        {(tab === '行动' || tab === '灵感' || tab === '目标建议') && (
+          <EntryList
+            projectId={project.id}
+            type={tab === '行动' ? 'action' : tab === '目标建议' ? 'goal' : 'idea'}
+          />
         )}
         {tab === '成果' && <ResultsList projectId={project.id} />}
         <div className="gentle-note">

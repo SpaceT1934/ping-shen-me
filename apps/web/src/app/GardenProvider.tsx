@@ -1,14 +1,38 @@
-import { useState, type ReactNode } from 'react';
+import { useState, useRef, type ReactNode } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { Command, GardenState } from '@apple/contracts';
+import { commandSchema, type Command, type GardenState } from '@apple/contracts';
+import { finishOperation } from '../lib/garden/request-operations';
 import { gardenApi, initializeGarden } from '../lib/garden/garden-api';
 import { createGardenView } from '../lib/garden/view-model';
 import { ApiRequestError } from '../lib/api';
 import { createUuid } from '../lib/uuid';
 import { GardenContext } from './garden-context';
+type PendingOperation = { fingerprint: string; operationId: string };
+const pendingStorageKey = 'apple-pending-operation-v3';
+function restorePending(): PendingOperation | null {
+  try {
+    const value = JSON.parse(sessionStorage.getItem(pendingStorageKey) || 'null');
+    return value && typeof value.fingerprint === 'string' && typeof value.operationId === 'string'
+      ? value
+      : null;
+  } catch {
+    return null;
+  }
+}
+function persistPending(value: PendingOperation | null) {
+  try {
+    if (value) sessionStorage.setItem(pendingStorageKey, JSON.stringify(value));
+    else sessionStorage.removeItem(pendingStorageKey);
+  } catch {
+    /* 当前页面仍保留提交编号。 */
+  }
+}
 export function GardenProvider({ children }: { children: ReactNode }) {
   const client = useQueryClient();
   const [error, setError] = useState('');
+  const [initialPending] = useState(restorePending);
+  const pending = useRef(initialPending);
+  const [canRetry, setCanRetry] = useState(Boolean(initialPending));
   const query = useQuery({
     queryKey: ['garden'],
     queryFn: initializeGarden,
@@ -27,15 +51,41 @@ export function GardenProvider({ children }: { children: ReactNode }) {
     setError('');
     const current = client.getQueryData<GardenState>(['garden']);
     if (!current) return null;
+    const fingerprint = JSON.stringify(command);
+    if (pending.current && pending.current.fingerprint !== fingerprint) {
+      setError('上次提交结果还未确认，请先重试上次提交，再保存修改。');
+      return null;
+    }
+    if (!pending.current) pending.current = { fingerprint, operationId: createUuid() };
+    persistPending(pending.current);
     try {
-      return await mutation.mutateAsync({
-        operationId: createUuid(),
+      const result = await mutation.mutateAsync({
+        operationId: pending.current.operationId,
         expectedVersion: current.version,
         command,
       });
+      pending.current = null;
+      persistPending(null);
+      setCanRetry(false);
+      return result;
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : '保存失败，输入已保留');
-      if (cause instanceof ApiRequestError && cause.code === 'VERSION_CONFLICT') {
+      if (cause instanceof ApiRequestError && cause.status >= 400 && cause.status < 500) {
+        if (pending.current) finishOperation(pending.current.operationId);
+        pending.current = null;
+      }
+      persistPending(pending.current);
+      setCanRetry(Boolean(pending.current));
+      setError(
+        cause instanceof ApiRequestError && cause.details?.length
+          ? `${cause.message}：${cause.details
+              .slice(0, 3)
+              .map((item) => item.message)
+              .join('；')}`
+          : cause instanceof Error
+            ? cause.message
+            : '保存失败，输入已保留',
+      );
+      if (cause instanceof ApiRequestError && cause.status === 409) {
         try {
           client.setQueryData(['garden'], await gardenApi.read());
         } catch {
@@ -43,6 +93,30 @@ export function GardenProvider({ children }: { children: ReactNode }) {
         }
       }
       return null;
+    }
+  };
+  const retryPending = async () => {
+    const previous = pending.current;
+    if (!previous || mutation.isPending) return;
+    try {
+      const envelope = commandSchema.parse({
+        command: JSON.parse(previous.fingerprint),
+        operationId: previous.operationId,
+        expectedVersion: query.data?.version || 0,
+      });
+      await mutation.mutateAsync(envelope);
+      pending.current = null;
+      persistPending(null);
+      setCanRetry(false);
+      setError('上次提交已确认保存。请先查看记录，再决定是否保存当前修改。');
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : '仍未确认保存结果，请重试。');
+      if (cause instanceof ApiRequestError && cause.status >= 400 && cause.status < 500) {
+        finishOperation(previous.operationId);
+        pending.current = null;
+        persistPending(null);
+        setCanRetry(false);
+      }
     }
   };
   if (!query.data)
@@ -82,8 +156,7 @@ export function GardenProvider({ children }: { children: ReactNode }) {
             icon,
             color: icon === 'book' ? 'blue' : icon === 'work' ? 'peach' : 'sage',
           });
-          const projects = result?.state.projects;
-          return projects?.[projects.length - 1]?.id || null;
+          return result?.state.projects.find((project) => project.name === name)?.id || null;
         },
         editProject: async (id, name, icon, color) =>
           Boolean(await execute({ type: 'project.update', id, name, icon, color })),
@@ -102,8 +175,8 @@ export function GardenProvider({ children }: { children: ReactNode }) {
         editTask: async (id, title, dueDate) =>
           Boolean(await execute({ type: 'task.update', id, title, dueDate })),
         deleteTask: async (id) => Boolean(await execute({ type: 'task.delete', id })),
-        saveEntries: async (items) =>
-          (await execute({ type: 'records.save', items }))?.feedback || null,
+        saveEntries: async (items, rawText) =>
+          (await execute({ type: 'records.save', items, rawText }))?.feedback || null,
         editEntry: async (id, content, projectId, recordType, date, contribution) =>
           Boolean(
             await execute({
@@ -118,7 +191,14 @@ export function GardenProvider({ children }: { children: ReactNode }) {
           ),
         deleteEntry: async (id) => Boolean(await execute({ type: 'record.delete', id })),
         updateProgress: async (id, value) =>
-          (await execute({ type: 'goal.progress', id, value }))?.feedback || null,
+          (
+            await execute({
+              type: 'goal.progress',
+              id,
+              value,
+              manual: view.projects.find((item) => item.goalId === id)?.goalType === 'manual',
+            })
+          )?.feedback || null,
         createGoal: async (projectId, goal, replace) =>
           (await execute({ type: 'goal.create', projectId, goal, replace }))?.feedback || null,
         harvestResult: async (id, followUp) =>
@@ -129,6 +209,11 @@ export function GardenProvider({ children }: { children: ReactNode }) {
       {error && (
         <div className="save-error" role="alert">
           <span>{error}</span>
+          {canRetry && (
+            <button disabled={mutation.isPending} onClick={() => void retryPending()}>
+              重试上次提交
+            </button>
+          )}
           <button aria-label="关闭提示" onClick={() => setError('')}>
             ×
           </button>

@@ -44,11 +44,11 @@ export function ReportsPage() {
       </div>
       <section className="report-banner">
         <p>
-          {report.actions.length ? (
+          {report.action_count ? (
             <>
-              这段时间你做了 {report.actions.length} 件事，
+              这段时间你做了 {report.action_count} 件事，
               <br />
-              照顾了 {report.activeCount} 个成长方向。
+              照顾了 {report.active_project_count} 个成长方向。
               <br />
               一点点，也能走很远。
             </>
@@ -67,7 +67,7 @@ export function ReportsPage() {
           <PixelIcon name="apple" size={35} />
           <span>行动次数</span>
           <strong>
-            {report.actions.length}
+            {report.action_count}
             <small> 次</small>
           </strong>
         </div>
@@ -75,7 +75,7 @@ export function ReportsPage() {
           <PixelIcon name="green" size={35} />
           <span>活跃方向</span>
           <strong>
-            {report.activeCount}
+            {report.active_project_count}
             <small> 个</small>
           </strong>
         </div>
@@ -83,7 +83,7 @@ export function ReportsPage() {
           <PixelIcon name="golden" size={35} />
           <span>新成果</span>
           <strong>
-            {report.resultCount}
+            {report.new_result_count}
             <small> 个</small>
           </strong>
         </div>
@@ -91,10 +91,10 @@ export function ReportsPage() {
       <section className="report-projects">
         <h2>各项目进展</h2>
         <p className="small-print">
-          进度条为当前目标，右侧为本周期累计进度变化；历史项目也会保留。
+          进度条显示当前目标进度；行动次数按所选周期统计，历史项目仍保留。
         </p>
         {projects.map((project) => {
-          const row = report.projects.find((item) => item.projectId === project.id)!;
+          const row = report.projects.find((item) => item.project_id === project.id);
           return (
             <div className="report-project-row" key={project.id}>
               <PixelIcon name={project.icon} size={33} />
@@ -106,13 +106,16 @@ export function ReportsPage() {
                   </small>
                 )}
               </span>
-              <strong>{row.count} 次</strong>
+              <strong>{row?.action_count ?? 0} 次</strong>
               <div className="progress-track">
                 <span style={{ width: `${project.percent}%` }} />
               </div>
               <small>
-                {row.delta > 0 ? '+' : ''}
-                {Math.round(row.delta)}%
+                {project.goalType === 'manual'
+                  ? project.goalCompleted
+                    ? '已达成'
+                    : '进行中'
+                  : `${Math.round(project.percent)}%`}
               </small>
             </div>
           );
@@ -121,17 +124,21 @@ export function ReportsPage() {
       </section>
       <section className="recent-section">
         <h2>值得记住的小进步</h2>
-        {[...report.actions]
-          .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt))
+        {[...report.recent_actions]
+          .sort(
+            (a, b) =>
+              b.occurred_at.localeCompare(a.occurred_at) ||
+              b.created_at.localeCompare(a.created_at),
+          )
           .slice(0, 3)
           .map((item) => (
             <div className="recent-row" key={item.id}>
               <span className="entry-dot" />
               <p>{item.content}</p>
-              <small>{item.date.slice(5)}</small>
+              <small>{item.occurred_at.slice(5, 10)}</small>
             </div>
           ))}
-        {!report.actions.length && <p className="empty-copy">这里会留下你的真实行动。</p>}
+        {!report.action_count && <p className="empty-copy">这里会留下你的真实行动。</p>}
       </section>
       <p className="report-ending">每一步，都算数。</p>
     </div>

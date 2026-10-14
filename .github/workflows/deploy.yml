@@ -36,7 +36,12 @@ jobs:
           printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
           chmod 600 "$HOME/.ssh/ping-shen-me-deploy" "$HOME/.ssh/known_hosts"
           ssh_args=(-i "$HOME/.ssh/ping-shen-me-deploy" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o BatchMode=yes)
-          lock_hash=$(sha256sum pnpm-lock.yaml | cut -d ' ' -f 1)
+          # Workspace libraries live in production node_modules too. Reuse only
+          # when their compiled code and manifests match, not just the lockfile.
+          lock_hash=$({
+            sha256sum pnpm-lock.yaml packages/contracts/package.json packages/domain/package.json
+            find packages/contracts/dist packages/domain/dist -type f -print0 | sort -z | xargs -0 sha256sum
+          } | sha256sum | cut -d ' ' -f 1)
           if ssh "${ssh_args[@]}" ubuntu@211.159.160.11 "check-deps $lock_hash"; then
             mode=reuse
           else

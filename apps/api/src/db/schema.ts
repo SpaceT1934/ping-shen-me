@@ -9,6 +9,7 @@ import {
   numeric,
   pgEnum,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uniqueIndex,
@@ -20,7 +21,7 @@ export const projectStatus = pgEnum('project_status', ['active', 'completed', 'a
 export const goalType = pgEnum('goal_type', ['count', 'manual', 'percentage']);
 export const goalStatus = pgEnum('goal_status', ['active', 'completed', 'archived']);
 export const taskStatus = pgEnum('task_status', ['pending', 'completed']);
-export const recordType = pgEnum('record_type', ['action', 'idea']);
+export const recordType = pgEnum('record_type', ['action', 'idea', 'goal']);
 export const recordSource = pgEnum('record_source', ['text', 'voice', 'task_complete']);
 
 const createdAt = () => timestamp('created_at', { withTimezone: true }).defaultNow().notNull();
@@ -187,3 +188,32 @@ export const webSessions = pgTable('web_sessions', {
     .notNull(),
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
 });
+
+// Durable HTTP operation results, independent of the legacy 500-command cache.
+export const apiOperations = pgTable(
+  'api_operations',
+  {
+    userId: uuid('user_id')
+      .references(() => users.id)
+      .notNull(),
+    key: varchar('key', { length: 200 }).notNull(),
+    fingerprint: varchar('fingerprint', { length: 64 }).notNull(),
+    response: jsonb('response').notNull(),
+    createdAt: createdAt(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.key] })],
+);
+
+// Identity guards provide DB uniqueness for entities persisted in snapshots.
+export const entityLinks = pgTable(
+  'garden_entity_links',
+  {
+    userId: uuid('user_id')
+      .references(() => users.id)
+      .notNull(),
+    kind: varchar('kind', { length: 30 }).notNull(),
+    sourceId: varchar('source_id', { length: 100 }).notNull(),
+    targetId: varchar('target_id', { length: 100 }).notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.kind, table.sourceId] })],
+);

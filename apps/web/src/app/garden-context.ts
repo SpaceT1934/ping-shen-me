@@ -21,12 +21,12 @@ type Context = GardenView & {
   addTask: (projectId: string, title: string, dueDate: string | null) => Promise<boolean>;
   editTask: (id: string, title: string, dueDate: string | null) => Promise<boolean>;
   deleteTask: (id: string) => Promise<boolean>;
-  saveEntries: (items: ManualDraft[]) => Promise<Feedback | null>;
+  saveEntries: (items: ManualDraft[], rawText?: string) => Promise<Feedback | null>;
   editEntry: (
     id: string,
     content: string,
     projectId: string | null,
-    type: 'action' | 'idea',
+    type: 'action' | 'idea' | 'goal',
     date: string,
     contribution: number,
   ) => Promise<boolean>;

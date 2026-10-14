@@ -23,6 +23,9 @@ export const projectSchema = z.object({
   status: z.enum(['active', 'completed', 'archived']),
   createdAt: time,
   currentGoalId: id.nullable(),
+  serverGrowth: z
+    .object({ count: z.number().int().nonnegative(), stageIndex: z.number().int().nonnegative() })
+    .optional(),
 });
 export const goalSchema = z.object({
   id,
@@ -41,6 +44,7 @@ export const taskSchema = z.object({
   projectId: id,
   title,
   dueDate: date.nullable(),
+  dueAt: z.iso.datetime({ offset: true }).nullable().optional(),
   completedAt: time.nullable(),
   actionId: id.nullable(),
   createdAt: time,
@@ -50,11 +54,15 @@ export const entrySchema = z.object({
   id,
   projectId: id.nullable(),
   content: z.string().trim().min(1).max(2000),
-  type: z.enum(['action', 'idea']),
+  type: z.enum(['action', 'idea', 'goal']),
   date,
   createdAt: time,
   deletedAt: time.nullable(),
   sourceTaskId: id.nullable(),
+  source: z.enum(['text', 'voice', 'task_complete']).optional(),
+  sourceText: z.string().max(10000).nullable().optional(),
+  emotion: z.string().max(100).nullable().optional(),
+  occurredAt: z.iso.datetime({ offset: true }).optional(),
   goalId: id.nullable(),
   contribution: z.number().nonnegative().max(1e9),
 });
@@ -86,6 +94,17 @@ export const gardenSchema = z.object({
   progressEvents: z.array(
     z.object({ id, projectId: id, goalId: id, at: time, deltaPercent: z.number() }),
   ),
+  recordBatches: z
+    .array(
+      z.object({
+        id,
+        rawText: z.string(),
+        source: z.enum(['text', 'voice']),
+        itemIds: z.array(id).optional(),
+        createdAt: time,
+      }),
+    )
+    .optional(),
   operations: z
     .array(
       z.object({
@@ -125,6 +144,11 @@ export type GoalInput = z.infer<typeof goalInput>;
 const draftInput = z.object({
   content: z.string().trim().min(1).max(2000),
   projectId: id.nullable(),
+  source: z.enum(['text', 'voice', 'task_complete']).optional(),
+  sourceText: z.string().max(10000).nullable().optional(),
+  emotion: z.string().max(100).nullable().optional(),
+  occurredAt: z.iso.datetime({ offset: true }).optional(),
+  dueAt: z.iso.datetime({ offset: true }).nullable().optional(),
   type: z.enum(['action', 'task', 'idea', 'goal']),
   date,
   dueDate: date.nullable().default(null),
@@ -188,17 +212,26 @@ const payloadSchema = z.discriminatedUnion('type', [
     goal: goalInput,
     replace: z.boolean(),
   }),
-  z.object({ type: z.literal('goal.progress'), id, value: z.number().nonnegative().max(1e9) }),
+  z.object({
+    type: z.literal('goal.progress'),
+    id,
+    value: z.number().nonnegative().max(1e9),
+    manual: z.boolean().optional(),
+  }),
   z.object({ type: z.literal('task.create'), projectId: id, title, dueDate: date.nullable() }),
   z.object({ type: z.literal('task.update'), id, title, dueDate: date.nullable() }),
   z.object({ type: z.literal('task.complete'), id, completed: z.boolean() }),
   z.object({ type: z.literal('task.delete'), id }),
-  z.object({ type: z.literal('records.save'), items: z.array(draftInput).min(1).max(50) }),
+  z.object({
+    type: z.literal('records.save'),
+    rawText: z.string().max(10000).optional(),
+    items: z.array(draftInput).min(1).max(50),
+  }),
   z.object({
     type: z.literal('record.update'),
     id,
     content: z.string().trim().min(1).max(2000),
-    recordType: z.enum(['action', 'idea']),
+    recordType: z.enum(['action', 'idea', 'goal']),
     projectId: id.nullable(),
     date,
     contribution: z.number().nonnegative().max(1e9),

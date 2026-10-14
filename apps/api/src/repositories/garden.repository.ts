@@ -5,6 +5,12 @@ export interface GardenRepository {
     userId: string,
     transform: (state: GardenState) => { state: GardenState; value: T },
   ): Promise<T>;
+  transactIdempotent<T>(
+    userId: string,
+    key: string,
+    fingerprint: string,
+    transform: (state: GardenState) => { state: GardenState; value: T },
+  ): Promise<T>;
   createSession(tokenHash: string, userId: string, expiresAt: string): Promise<void>;
   resolveSession(tokenHash: string): Promise<string | null>;
   probe(): Promise<void>;

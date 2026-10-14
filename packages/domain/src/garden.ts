@@ -138,7 +138,11 @@ export function applyCommand(
     const record: Entry = {
       id: id(),
       projectId: draft.projectId,
-      type: draft.type === 'idea' ? 'idea' : 'action',
+      type: draft.type === 'goal' ? 'goal' : draft.type === 'idea' ? 'idea' : 'action',
+      source: sourceTaskId ? 'task_complete' : draft.source || 'text',
+      sourceText: draft.sourceText ?? null,
+      emotion: draft.emotion ?? null,
+      occurredAt: draft.occurredAt || (draft.date === today ? now : `${draft.date}T00:00:00+08:00`),
       content: draft.content,
       date: draft.date,
       createdAt: now,
@@ -239,6 +243,7 @@ export function applyCommand(
             {
               content: task.title,
               type: 'action',
+              source: 'task_complete',
               projectId: task.projectId,
               date: today,
               dueDate: null,
@@ -265,8 +270,7 @@ export function applyCommand(
     }
     case 'records.save': {
       for (const draft of command.items) {
-        if ((draft.type === 'task' || draft.type === 'goal') && draft.content.length > 200)
-          fail('计划和目标请控制在 200 字以内');
+        if (draft.type === 'task' && draft.content.length > 200) fail('计划请控制在 200 字以内');
         if (draft.type === 'task') {
           if (!draft.projectId) fail('计划需要关联一个项目');
           projectFor(draft.projectId, true);
@@ -275,23 +279,12 @@ export function applyCommand(
             projectId: draft.projectId,
             title: draft.content,
             dueDate: draft.dueDate,
+            dueAt: draft.dueAt ?? null,
             completedAt: null,
             actionId: null,
             createdAt: now,
             deletedAt: null,
           });
-        } else if (draft.type === 'goal') {
-          if (!draft.projectId) fail('目标需要关联一个项目');
-          createGoal(
-            draft.projectId,
-            {
-              title: draft.content,
-              type: draft.goalType,
-              target: draft.target,
-              unit: draft.unit,
-            },
-            true,
-          );
         } else makeRecord(draft);
       }
       break;
@@ -336,15 +329,6 @@ export function applyCommand(
       if (result.harvestedAt) break;
       result.harvestedAt = now;
       result.followUp = command.followUp;
-      const project = projectFor(result.projectId);
-      // 历史待收获成果不会改变已切换到新目标的项目。
-      if (project.currentGoalId === result.goalId) {
-        if (command.followUp === 'complete') project.status = 'completed';
-        else {
-          project.status = 'active';
-          project.currentGoalId = null;
-        }
-      }
       break;
     }
     case 'import.legacy': {

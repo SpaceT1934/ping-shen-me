@@ -14,15 +14,15 @@ describe('基础 API', () => {
   it('无需 Docker，本地 PostgreSQL 已就绪', async () => {
     const health = await app.inject({ url: '/api/v1/health' });
     expect(health.statusCode).toBe(200);
-    expect(healthResponseSchema.parse(health.json()).status).toBe('ok');
+    expect(healthResponseSchema.parse(health.json().data).status).toBe('ok');
     const ready = await app.inject({ url: '/api/v1/health/ready' });
     expect(ready.statusCode).toBe(200);
-    expect(ready.json().driver).toBe('pglite');
+    expect(ready.json().data.driver).toBe('pglite');
   });
   it('未知接口返回统一错误结构', async () => {
     const response = await app.inject({ url: '/api/v1/missing' });
     expect(response.statusCode).toBe(404);
-    expect(apiErrorSchema.parse(response.json()).error.code).toBe('NOT_FOUND');
+    expect(apiErrorSchema.parse(response.json()).code).toBe('NOT_FOUND');
   });
   it('允许配置的前端来源访问', async () => {
     const response = await app.inject({

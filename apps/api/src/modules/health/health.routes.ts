@@ -11,7 +11,11 @@ export const registerHealthRoutes: FastifyPluginAsync<{ repository: GardenReposi
       await repository.probe();
       return { status: 'ok', database: 'connected', driver: repository.driver };
     } catch {
-      return reply.status(503).send({ status: 'unavailable', database: 'disconnected' });
+      return reply.status(503).send({
+        code: 'DATABASE_UNAVAILABLE',
+        message: '数据库暂时不可用',
+        request_id: _request.id,
+      });
     }
   });
 };

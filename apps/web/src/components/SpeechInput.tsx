@@ -131,6 +131,8 @@ export function SpeechInput({
         if (event.data.size) chunks.push(event.data);
       };
       device.onerror = () => {
+        if (recorder.current !== device) return;
+        recorder.current = null;
         cancelled.current = true;
         stopTracks();
         closeContext();
@@ -141,6 +143,8 @@ export function SpeechInput({
         }
       };
       device.onstop = () => {
+        if (recorder.current !== device) return;
+        recorder.current = null;
         stopTracks();
         if (!mounted.current || cancelled.current) {
           closeContext();
@@ -225,7 +229,7 @@ export function SpeechInput({
             className="voice-cancel"
             onClick={() => {
               cancelled.current = true;
-              recorder.current?.stop();
+              if (recorder.current?.state === 'recording') recorder.current.stop();
             }}
           >
             取消录音

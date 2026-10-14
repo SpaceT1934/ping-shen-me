@@ -15,10 +15,11 @@ export async function apiRequest<T>(
   path: string,
   schema: z.ZodType<T>,
   options: RequestInit = {},
+  timeoutMs = 20_000,
 ): Promise<T> {
   let response: Response;
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 20_000);
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
     response = await fetch(`${apiBase}${path}`, {
       ...options,

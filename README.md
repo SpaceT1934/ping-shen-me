@@ -1,6 +1,6 @@
 # 苹什么 Web App
 
-手机优先的手动成长管理应用。项目、目标、任务、行动、灵感、成长与成果已通过独立后端保存到数据库。AI 对话、自动分类、语音识别暂不接入。
+手机优先的成长管理应用。项目、目标、任务、行动、灵感、成长与成果通过独立后端保存到数据库。现已接入 Python AI 服务，支持方向提取、记录分类、语音转写和可编辑草稿确认；语音模型采用 `qwen-audio-3.1-asr-flash`，需在配置中启用。
 
 支持首次引导、项目创建与编辑、归档和恢复、三种目标模式、任务日期与完成撤销、目标建议、批量手动记录及纠错、成长阶段、成果历史与收获选择、周期报告和记录导出。已有浏览器原型数据会一次性迁移，原始缓存保留。
 
@@ -25,12 +25,14 @@ apps/web/src/
   components/             通用展示组件与环境动效
   lib/garden/             REST 数据访问、幂等重试、旧缓存迁移、页面视图映射
 apps/api/src/
+  modules/ai/             当前会话的 AI 调用桥接
   modules/session/        匿名会话
   modules/garden/         路由与应用服务
   modules/health/         存活和数据库就绪检查
   repositories/           数据访问接口与 PostgreSQL/PGlite 实现
   db/                     Drizzle 模型与迁移入口
 packages/contracts/       共享数据结构、输入和响应校验
+apps/ai/                  Python AI 服务（只生成候选结果，不存业务数据）
 packages/domain/          不依赖 React、Fastify 或数据库的业务规则
 infra/                    本地数据库、Nginx 与发布脚本
 .github/workflows/         main 分支检查与自动发布
@@ -86,3 +88,9 @@ pnpm --filter @apple/web preview
 - [手动业务规则](docs/manual-v1.md)
 - [UI 素材与生成提示词](docs/ui-assets.md)
 - [腾讯云测试部署](docs/tencent-cloud-deploy.md)
+
+## AI 接入
+
+新增的 Python AI 服务、网页确认流程、启动方式和分工见 [AI接入说明](./AI接入说明.md)。本地语音已完成实际录音验证；新环境默认关闭，确认额度和“用完即停”后再启用。
+
+部署沿用 GitHub main 自动发布到腾讯云的流程。首次启用 Python 的服务器步骤见 [腾讯云部署说明](docs/tencent-cloud-deploy.md)。

@@ -25,12 +25,13 @@ export const goalTypeSchema = z.enum(['count', 'manual', 'percentage']);
 export const recordDraftSchema = z.object({
   content: z.string().trim().min(1).max(2000),
   type: recordTypeSchema,
-  projectId: z.uuid().nullable(),
+  projectId: z.string().min(1).max(100).nullable(),
   emotion: z.string().max(100).nullable(),
   sourceText: z.string().max(10000),
 });
 export type RecordDraft = z.infer<typeof recordDraftSchema>;
 
 export * from './garden.js';
+export * from './ai.js';
 
 export * from './http.js';

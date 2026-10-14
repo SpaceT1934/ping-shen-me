@@ -157,25 +157,37 @@ export function applyCommand(
     return record;
   };
   const command = envelope.command;
+  const createProject = (input: {
+    name: string;
+    icon: GardenState['projects'][number]['icon'];
+    color: GardenState['projects'][number]['color'];
+    goal: GoalInput | null;
+  }) => {
+    if (state.projects.length >= 200) fail('项目数量已达到上限');
+    nameAvailable(input.name);
+    const projectId = id();
+    state.projects.push({
+      id: projectId,
+      name: input.name,
+      icon: input.icon,
+      color: input.color,
+      status: 'active',
+      createdAt: now,
+      currentGoalId: null,
+    });
+    if (input.goal) createGoal(projectId, input.goal);
+    state.onboardingCompleted = true;
+  };
   switch (command.type) {
     case 'onboard':
       state.onboardingCompleted = true;
       break;
     case 'project.create': {
-      if (state.projects.length >= 200) fail('项目数量已达到上限');
-      nameAvailable(command.name);
-      const projectId = id();
-      state.projects.push({
-        id: projectId,
-        name: command.name,
-        icon: command.icon,
-        color: command.color,
-        status: 'active',
-        createdAt: now,
-        currentGoalId: null,
-      });
-      if (command.goal) createGoal(projectId, command.goal);
-      state.onboardingCompleted = true;
+      createProject(command);
+      break;
+    }
+    case 'project.batch': {
+      for (const project of command.projects) createProject(project);
       break;
     }
     case 'project.update': {
@@ -275,6 +287,8 @@ export function applyCommand(
           if (!draft.projectId) fail('计划需要关联一个项目');
           projectFor(draft.projectId, true);
           state.tasks.push({
+            sourceText: draft.sourceText,
+            emotion: draft.emotion,
             id: id(),
             projectId: draft.projectId,
             title: draft.content,
@@ -299,6 +313,8 @@ export function applyCommand(
         record.contribution === command.contribution;
       if (!preserveContribution) contribution(record, true);
       const replacement = makeRecord({
+        sourceText: record.sourceText,
+        emotion: record.emotion,
         ...command,
         type: command.recordType,
         contribution: preserveContribution ? 0 : command.contribution,

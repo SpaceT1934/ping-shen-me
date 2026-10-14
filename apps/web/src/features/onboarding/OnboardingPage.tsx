@@ -5,6 +5,7 @@ import { LineIcon, PixelIcon, type SpriteName } from '../../components/PixelIcon
 import { PageHeading } from '../../components/PageHeading';
 import { AmbientScene, LivingMascot } from '../../components/AmbientScene';
 import { GoalFields, defaultGoal } from '../projects/components/GoalFields';
+import { AIProjectSeed } from './AIProjectSeed';
 export function WelcomePage() {
   const { startGarden, busy } = useGarden();
   const navigate = useNavigate();
@@ -67,6 +68,7 @@ export function SeedPage() {
           <LivingMascot size={145} />
         </div>
       </div>
+      <AIProjectSeed />
       <form
         className="seed-panel"
         onSubmit={async (event) => {

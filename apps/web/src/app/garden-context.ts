@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { GardenState, GoalInput, ManualDraft, Feedback } from '@apple/contracts';
+import type { GardenState, GoalInput, ManualDraft, Feedback, Command } from '@apple/contracts';
 import type { SpriteName } from '../components/PixelIcon';
 import type { createGardenView } from '../lib/garden/view-model';
 type GardenView = ReturnType<typeof createGardenView>;
@@ -10,6 +10,9 @@ type Context = GardenView & {
   busy: boolean;
   startGarden: () => Promise<boolean>;
   addProject: (name: string, goal: GoalInput | null, icon?: SpriteName) => Promise<string | null>;
+  addProjects: (
+    projects: Extract<Command, { type: 'project.batch' }>['projects'],
+  ) => Promise<boolean>;
   editProject: (
     id: string,
     name: string,

@@ -37,7 +37,14 @@ export function registerProjectRoutes(app: FastifyInstance, { service, sessions 
             name: item.name,
             icon: item.icon,
             color: item.color,
-            goal: null,
+            goal: item.goal
+              ? {
+                  title: item.goal.title,
+                  type: item.goal.mode === 'percent' ? 'percentage' : item.goal.mode,
+                  target: item.goal.mode === 'manual' ? 1 : (item.goal.target_value ?? 100),
+                  unit: item.goal.unit,
+                }
+              : null,
           });
           return {
             ...projectDto(state, state.projects[state.projects.length - 1]!),

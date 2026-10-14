@@ -1930,3 +1930,55 @@ input::placeholder {
     gap: 8px;
   }
 }
+/* AI 输入、草稿与语音入口沿用页面原有的纸张和按钮样式。 */
+.ai-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.speech-input {
+  margin: 12px 0;
+}
+.audio-upload {
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.audio-upload input {
+  max-width: 200px;
+  font-size: 12px;
+}
+.ai-seed {
+  margin-bottom: 12px;
+}
+.ai-seed textarea {
+  width: 100%;
+}
+.ai-candidate {
+  padding: 14px;
+  margin: 12px 0;
+  border: 1px solid #d7c6b3;
+  border-radius: 12px;
+  background: #fff8ed;
+}
+.ai-candidate label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0;
+}
+.ai-candidate .checkbox-line {
+  flex-direction: row;
+}
+.ai-summary {
+  margin: 16px 0;
+}
+.ai-summary p {
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+.record-panel > .outline-button {
+  margin-top: 10px;
+}

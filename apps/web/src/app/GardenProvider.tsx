@@ -160,6 +160,9 @@ export function GardenProvider({ children }: { children: ReactNode }) {
         },
         editProject: async (id, name, icon, color) =>
           Boolean(await execute({ type: 'project.update', id, name, icon, color })),
+        addProjects: async (projects) =>
+          Boolean(await execute({ type: 'project.batch', projects })),
+        /* 单个项目与批量确认使用同一套业务命令。 */
         setProjectStatus: async (id, status) =>
           Boolean(await execute({ type: 'project.status', id, status })),
         toggleTask: async (id) =>

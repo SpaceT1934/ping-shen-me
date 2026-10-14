@@ -3,6 +3,10 @@ const id = z.string().min(1).max(100);
 const title = z.string().trim().min(1).max(200);
 const date = z.iso.date();
 const time = z.iso.datetime();
+const provenance = {
+  sourceText: z.string().max(10000).nullable().optional(),
+  emotion: z.string().max(100).nullable().optional(),
+};
 export const spriteSchema = z.enum([
   'mascot',
   'apple',
@@ -28,6 +32,7 @@ export const projectSchema = z.object({
     .optional(),
 });
 export const goalSchema = z.object({
+  ...provenance,
   id,
   projectId: id,
   title,
@@ -40,6 +45,7 @@ export const goalSchema = z.object({
   archivedAt: time.nullable(),
 });
 export const taskSchema = z.object({
+  ...provenance,
   id,
   projectId: id,
   title,
@@ -51,6 +57,7 @@ export const taskSchema = z.object({
   deletedAt: time.nullable(),
 });
 export const entrySchema = z.object({
+  ...provenance,
   id,
   projectId: id.nullable(),
   content: z.string().trim().min(1).max(2000),
@@ -142,6 +149,7 @@ const goalInput = z.object({
 });
 export type GoalInput = z.infer<typeof goalInput>;
 const draftInput = z.object({
+  ...provenance,
   content: z.string().trim().min(1).max(2000),
   projectId: id.nullable(),
   source: z.enum(['text', 'voice', 'task_complete']).optional(),
@@ -187,6 +195,20 @@ export const legacySchema = z.object({
 });
 const payloadSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('onboard') }),
+  z.object({
+    type: z.literal('project.batch'),
+    projects: z
+      .array(
+        z.object({
+          name: title,
+          icon: spriteSchema,
+          color: colorSchema,
+          goal: goalInput.nullable(),
+        }),
+      )
+      .min(1)
+      .max(20),
+  }),
   z.object({
     type: z.literal('project.create'),
     name: title,

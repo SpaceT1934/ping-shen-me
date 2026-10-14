@@ -167,6 +167,7 @@ export const projectBatchSchema = z
             name,
             icon: spriteSchema.default('green'),
             color: colorSchema.default('sage'),
+            goal: goalCreateSchema.nullable().optional(),
           })
           .strict(),
       )

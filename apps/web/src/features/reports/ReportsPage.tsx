@@ -4,6 +4,7 @@ import { gardenApi } from '../../lib/garden/garden-api';
 import { useGarden } from '../../app/garden-context';
 import { PixelIcon } from '../../components/PixelIcon';
 import { PageHeading } from '../../components/PageHeading';
+import { AIReportSummary } from './AIReportSummary';
 export function ReportsPage() {
   const [period, setPeriod] = useState<'7天' | '30天' | '本月' | '全部'>('7天');
   const { state, projects } = useGarden();
@@ -63,6 +64,7 @@ export function ReportsPage() {
         <PixelIcon name="mascot" size={76} />
       </section>
       <div className="report-stats">
+        {/* 数字始终来自业务统计，AI 仅生成回顾文字。 */}
         <div>
           <PixelIcon name="apple" size={35} />
           <span>行动次数</span>
@@ -89,6 +91,12 @@ export function ReportsPage() {
         </div>
       </div>
       <section className="report-projects">
+        <AIReportSummary
+          key={`${period}:${state.version}`}
+          period={period}
+          version={state.version}
+          hasData={Boolean(report.action_count || report.new_result_count)}
+        />
         <h2>各项目进展</h2>
         <p className="small-print">
           进度条显示当前目标进度；行动次数按所选周期统计，历史项目仍保留。

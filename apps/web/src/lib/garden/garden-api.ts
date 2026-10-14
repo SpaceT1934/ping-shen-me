@@ -194,6 +194,23 @@ async function mutate(envelope: CommandEnvelope) {
         );
       break;
     }
+    case 'project.batch': {
+      await write(
+        '/projects/batch',
+        'POST',
+        {
+          projects: command.projects.map((project, index) => ({
+            client_item_id: `${operationId}:${index}`,
+            name: project.name,
+            icon: project.icon,
+            color: project.color,
+            goal: project.goal ? goalBody(project.goal) : null,
+          })),
+        },
+        z.object({ projects: z.array(projectDtoSchema) }),
+      );
+      break;
+    }
     case 'project.update':
       await write(
         `/projects/${command.id}`,
@@ -257,7 +274,7 @@ async function mutate(envelope: CommandEnvelope) {
           raw_text:
             command.rawText ??
             command.items.map((item) => item.sourceText ?? item.content).join('\n'),
-          source: 'text',
+          source: command.items.some((item) => item.source === 'voice') ? 'voice' : 'text',
           items: command.items.map((item, index) => ({
             client_item_id: `${operationId}:${index}`,
             content: item.content,

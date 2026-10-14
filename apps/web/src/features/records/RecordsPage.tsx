@@ -9,9 +9,16 @@ import { LineIcon, PixelIcon } from '../../components/PixelIcon';
 import { AmbientScene, LivingMascot } from '../../components/AmbientScene';
 import { createUuid } from '../../lib/uuid';
 import { EntryList } from '../projects/components/EntryList';
+import { SpeechInput } from '../../components/SpeechInput';
+import { aiApi } from '../../lib/ai-api';
 type Draft = ManualDraft & { key: string; selected: boolean };
 const draftKey = 'apple-manual-draft-v2';
-function restoreDraft(): { text: string; drafts: Draft[]; confirming: boolean } {
+function restoreDraft(): {
+  text: string;
+  drafts: Draft[];
+  confirming: boolean;
+  source: 'text' | 'voice';
+} {
   try {
     const value = JSON.parse(sessionStorage.getItem(draftKey) || 'null');
     if (value && typeof value.text === 'string') {
@@ -23,12 +30,13 @@ function restoreDraft(): { text: string; drafts: Draft[]; confirming: boolean } 
         text: value.text.slice(0, 2000),
         drafts: parsed.success ? parsed.data : [],
         confirming: parsed.success && value.confirming === true,
+        source: value.source === 'voice' ? 'voice' : 'text',
       };
     }
   } catch {
     /* 无草稿时从空输入开始。 */
   }
-  return { text: '', drafts: [], confirming: false };
+  return { text: '', drafts: [], confirming: false, source: 'text' };
 }
 const blankDraft = (content = ''): Draft => ({
   key: createUuid(),
@@ -47,18 +55,24 @@ export function RecordsPage() {
   const { projects, saveEntries, busy } = useGarden();
   const [savedDraft] = useState(restoreDraft);
   const [text, setText] = useState(savedDraft.text);
+  const [inputSource, setInputSource] = useState<'text' | 'voice'>(savedDraft.source);
   const [drafts, setDrafts] = useState<Draft[]>(savedDraft.drafts);
   const [confirming, setConfirming] = useState(savedDraft.confirming);
   const [notice, setNotice] = useState('');
   const [history, setHistory] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [voiceBusy, setVoiceBusy] = useState(false);
   const navigate = useNavigate();
   useEffect(() => {
     try {
-      sessionStorage.setItem(draftKey, JSON.stringify({ text, drafts, confirming }));
+      sessionStorage.setItem(
+        draftKey,
+        JSON.stringify({ text, drafts, confirming, source: inputSource }),
+      );
     } catch {
       /* 请求失败时仍保留当前页面输入。 */
     }
-  }, [text, drafts, confirming]);
+  }, [text, drafts, confirming, inputSource]);
   const update = (key: string, patch: Partial<Draft>) =>
     setDrafts((previous) =>
       previous.map((item) => (item.key === key ? { ...item, ...patch } : item)),
@@ -85,11 +99,15 @@ export function RecordsPage() {
         goalType: item.goalType,
         target: item.target,
         unit: item.unit,
+        sourceText: item.sourceText,
+        emotion: item.emotion,
+        source: item.source ?? inputSource,
       })),
       text,
     );
     if (!feedback) return;
     setText('');
+    setInputSource('text');
     setDrafts([]);
     setConfirming(false);
     if (feedback.growthProjectIds.length) navigate('/growth', { state: { feedback } });
@@ -115,12 +133,20 @@ export function RecordsPage() {
             确认后就能给树浇水啦～
           </p>
         </div>
-        <p className="small-print">请手动选择分类和方向；未归类记录也能保存。</p>
+        <p className="small-print">
+          请检查分类、方向和日期；未归类记录也能保存。目标进度由你确认贡献数量。
+        </p>
         <div className="draft-list">
           {drafts.map((item) => {
             const project = projects.find((project) => project.id === item.projectId);
             return (
               <article className={`draft-card ${project?.color || 'peach'}`} key={item.key}>
+                {item.sourceText && (
+                  <p className="small-print">
+                    来自：{item.sourceText}
+                    {item.emotion ? ` · 情绪：${item.emotion}` : ''}
+                  </p>
+                )}
                 <div className="draft-card-top">
                   <PixelIcon name={project?.icon || 'apple'} size={44} />
                   <div className="draft-selects">
@@ -250,21 +276,59 @@ export function RecordsPage() {
           placeholder="今天剪完了一条视频。背了30个单词。明天想去拍些新素材…"
           rows={4}
           maxLength={2000}
+          disabled={analyzing || voiceBusy}
         />
         <div className="input-footer">
           <span>{text.length}/2000</span>
           <span>多件事可以用句号分开</span>
         </div>
+        <SpeechInput
+          onBusyChange={setVoiceBusy}
+          disabled={analyzing}
+          maxChars={2000 - text.length - (text ? 1 : 0)}
+          onText={(value) => {
+            setInputSource('voice');
+            setText((previous) => (previous ? `${previous}\n${value}` : value));
+          }}
+        />
         <div className="example-chips">
-          <button onClick={() => setText('今天剪完了一条视频。背了30个单词。想做一期生活采访。')}>
+          <button
+            disabled={analyzing || voiceBusy}
+            onClick={() => setText('今天剪完了一条视频。背了30个单词。想做一期生活采访。')}
+          >
             试一段示例
           </button>
-          <button onClick={() => setHistory(true)}>查看记录历史</button>
+          <button disabled={analyzing || voiceBusy} onClick={() => setHistory(true)}>
+            查看记录历史
+          </button>
           <Link to="/projects">看看我的方向</Link>
         </div>
         <button
           className="coral-button full-width"
-          disabled={!text.trim()}
+          disabled={!text.trim() || analyzing || voiceBusy}
+          onClick={async () => {
+            setAnalyzing(true);
+            setNotice('');
+            try {
+              const result = await aiApi.records(text, inputSource);
+              if (!result.items.length) {
+                setNotice('没有识别出可保存的事项，可以补充描述或手动整理。');
+                return;
+              }
+              setDrafts(result.items.map((item) => ({ ...blankDraft(), ...item })));
+              setConfirming(true);
+            } catch (cause) {
+              setNotice(cause instanceof Error ? cause.message : '整理失败，原文已保留');
+            } finally {
+              setAnalyzing(false);
+            }
+          }}
+        >
+          {analyzing ? '正在整理记录…' : 'AI 整理记录'}
+        </button>
+        <button
+          className="outline-button full-width"
+          disabled={!text.trim() || analyzing || voiceBusy}
           onClick={() => {
             const items = text
               .split(/[。；;\n]+/)

@@ -8,6 +8,7 @@ import { ZodError } from 'zod';
 import { DomainError } from '@apple/domain';
 import { createGardenRepository } from './repositories/sql-garden.repository.js';
 import { registerGardenRoutes } from './modules/garden/garden.routes.js';
+import { registerAiRoutes } from './modules/ai/ai.routes.js';
 
 export async function buildApp(env: Env) {
   const app = Fastify({
@@ -83,7 +84,8 @@ export async function buildApp(env: Env) {
     reply.status(404).send({ code: 'NOT_FOUND', message: '接口不存在', request_id: request.id });
   });
 
-  await app.register(registerHealthRoutes, { prefix: '/api/v1', repository });
+  await app.register(registerHealthRoutes, { prefix: '/api/v1', repository, env });
   await app.register(registerGardenRoutes, { prefix: '/api/v1', repository, env });
+  await app.register(registerAiRoutes, { prefix: '/api/v1', repository, env });
   return app;
 }

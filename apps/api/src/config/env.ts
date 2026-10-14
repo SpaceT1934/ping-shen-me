@@ -11,6 +11,12 @@ const envSchema = z.object({
   DATA_DRIVER: z.enum(['pglite', 'postgres']).optional(),
   PGLITE_DATA_DIR: z.string().optional(),
   COOKIE_SECURE: z.enum(['true', 'false']).optional(),
+  AI_SERVICE_URL: z.url().default('http://127.0.0.1:8002'),
+  AI_SERVICE_TOKEN: z.string().optional(),
+  AI_REQUIRED_ON_DEPLOY: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
 });
 
 export function readEnv(input: NodeJS.ProcessEnv = process.env) {

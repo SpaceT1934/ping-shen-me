@@ -82,7 +82,8 @@ export function GardenProvider({ children }: { children: ReactNode }) {
             icon,
             color: icon === 'book' ? 'blue' : icon === 'work' ? 'peach' : 'sage',
           });
-          return result?.state.projects.at(-1)?.id || null;
+          const projects = result?.state.projects;
+          return projects?.[projects.length - 1]?.id || null;
         },
         editProject: async (id, name, icon, color) =>
           Boolean(await execute({ type: 'project.update', id, name, icon, color })),

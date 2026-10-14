@@ -16,15 +16,19 @@ export async function apiRequest<T>(
   options: RequestInit = {},
 ): Promise<T> {
   let response: Response;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20_000);
   try {
     response = await fetch(`${apiBase}${path}`, {
       ...options,
       credentials: 'include',
       headers: { 'Content-Type': 'application/json', ...options.headers },
-      signal: AbortSignal.timeout(20_000),
+      signal: controller.signal,
     });
   } catch {
     throw new ApiRequestError('连接暂时中断，输入已保留，请重试', 0, 'NETWORK_ERROR');
+  } finally {
+    clearTimeout(timeout);
   }
   if (!response.ok) {
     const body: unknown = await response.json().catch(() => null);

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useGarden } from '../../app/garden-context';
-import { PixelIcon } from '../../components/PixelIcon';
+import { ArtIcon } from '../../components/Illustration';
 import { PageHeading } from '../../components/PageHeading';
 import { AmbientScene } from '../../components/AmbientScene';
 import { GoalCard } from './components/GoalCard';
@@ -9,7 +9,7 @@ import { TaskList } from './components/TaskList';
 import { EntryList } from './components/EntryList';
 import { ResultsList } from './components/ResultsList';
 import { ProjectSettings } from './components/ProjectSettings';
-import { PixelTree } from '../../components/GardenVisuals';
+import { ProjectTree } from '../../components/GardenVisuals';
 import { growthStages } from '@apple/domain';
 export function ProjectDetailPage() {
   const { id } = useParams();
@@ -38,7 +38,7 @@ export function ProjectDetailPage() {
         <AmbientScene indoor />
         <PageHeading title="项目详情" back="/projects" />
         <div className="detail-name">
-          <PixelTree stage={project.growth.stageIndex} size={80} />
+          <ProjectTree stage={project.growth.stageIndex} size={80} />
           <div>
             <h1>{project.name}</h1>
             <p>
@@ -55,7 +55,7 @@ export function ProjectDetailPage() {
         <div className="tree-stage-gallery" aria-label="成长阶段">
           {growthStages.map((stage, index) => (
             <div key={stage.name} className={project.growth.stageIndex === index ? 'current' : ''}>
-              <PixelTree stage={index} size={64} />
+              <ProjectTree stage={index} size={64} />
               <strong>{stage.name}</strong>
               <small>
                 {index === 3
@@ -95,7 +95,7 @@ export function ProjectDetailPage() {
         )}
         {tab === '果篮' && <ResultsList projectId={project.id} />}
         <div className="gentle-note">
-          <PixelIcon name="mascot" size={58} />
+          <ArtIcon name="mascot" size={58} />
           <p>
             不必每天都很厉害，
             <br />

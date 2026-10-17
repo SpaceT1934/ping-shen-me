@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { gardenApi } from '../../lib/garden/garden-api';
 import { useGarden } from '../../app/garden-context';
-import { PixelIcon } from '../../components/PixelIcon';
+import { ArtIcon, Illustration } from '../../components/Illustration';
 import { PageHeading } from '../../components/PageHeading';
+import { activityBuckets } from '../../lib/garden/activity-chart';
 import { AIReportSummary } from './AIReportSummary';
 export function ReportsPage() {
   const [period, setPeriod] = useState<'7天' | '30天' | '本月' | '全部'>('7天');
@@ -27,6 +28,13 @@ export function ReportsPage() {
         )}
       </div>
     );
+  const buckets = activityBuckets(state.records, report.start_at, report.end_at);
+  const peak = Math.max(1, ...buckets.map((item) => item.count));
+  const trend = buckets.map((_, index) => ({
+    x: 15 + (index * 250) / Math.max(1, buckets.length - 1),
+    count: buckets.slice(0, index + 1).reduce((sum, bucket) => sum + bucket.count, 0),
+  }));
+  const total = Math.max(1, trend.at(-1)?.count ?? 0);
   return (
     <div className="paper-page reports-page">
       <PageHeading title="我的成长报告" />
@@ -61,12 +69,12 @@ export function ReportsPage() {
             </>
           )}
         </p>
-        <PixelIcon name="mascot" size={76} />
+        <ArtIcon name="mascot" size={76} />
       </section>
       <div className="report-stats">
         {/* 数字始终来自业务统计，AI 仅生成回顾文字。 */}
         <div>
-          <PixelIcon name="apple" size={35} />
+          <ArtIcon name="apple" size={35} />
           <span>行动次数</span>
           <strong>
             {report.action_count}
@@ -74,7 +82,7 @@ export function ReportsPage() {
           </strong>
         </div>
         <div>
-          <PixelIcon name="green" size={35} />
+          <ArtIcon name="green" size={35} />
           <span>活跃方向</span>
           <strong>
             {report.active_project_count}
@@ -82,7 +90,7 @@ export function ReportsPage() {
           </strong>
         </div>
         <div>
-          <PixelIcon name="golden" size={35} />
+          <ArtIcon name="golden" size={35} />
           <span>新成果</span>
           <strong>
             {report.new_result_count}
@@ -90,6 +98,59 @@ export function ReportsPage() {
           </strong>
         </div>
       </div>
+      <section className="journal-chart">
+        <h2>
+          <Illustration name="sprout" size={24} />
+          行动统计
+        </h2>
+        <div className="activity-bars" aria-label="本周期行动统计">
+          {buckets.map((item, index) => (
+            <div key={index} title={`${item.label}起：${item.count}次行动`}>
+              <strong>{item.count}</strong>
+              <span style={{ height: `${(item.count / peak) * 85 + 3}px` }} />
+              <small>{item.label}</small>
+            </div>
+          ))}
+        </div>
+        <p>按所选周期分段展示，数据来自已保存的行动。</p>
+      </section>
+      <section className="journal-chart trend-chart">
+        <h2>
+          <Illustration name="fruit-red" size={22} />
+          行动积累
+        </h2>
+        <svg
+          viewBox="0 0 280 95"
+          role="img"
+          aria-label={`本周期累计 ${trend.at(-1)?.count ?? 0} 次行动`}
+        >
+          <path d="M15 82H265" stroke="#d9ccb5" fill="none" />
+          <path
+            d={trend
+              .map(
+                (item, index) => `${index ? 'L' : 'M'}${item.x} ${82 - (item.count / total) * 62}`,
+              )
+              .join(' ')}
+            fill="none"
+            stroke="#ee9a84"
+            strokeWidth="2.5"
+          />
+          {trend.map((item, index) => (
+            <g key={index}>
+              <circle cx={item.x} cy={82 - (item.count / total) * 62} r="4" fill="#f18f7c" />
+              <text
+                x={item.x}
+                y={72 - (item.count / total) * 62}
+                textAnchor="middle"
+                fill="#997a5d"
+                fontSize="10"
+              >
+                {item.count}
+              </text>
+            </g>
+          ))}
+        </svg>
+      </section>
       <section className="report-projects">
         <AIReportSummary
           key={`${period}:${state.version}`}
@@ -105,7 +166,7 @@ export function ReportsPage() {
           const row = report.projects.find((item) => item.project_id === project.id);
           return (
             <div className="report-project-row" key={project.id}>
-              <PixelIcon name={project.icon} size={33} />
+              <ArtIcon name={project.icon} size={33} />
               <span>
                 {project.name}
                 {project.status !== 'active' && (

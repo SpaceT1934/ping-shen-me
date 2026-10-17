@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGarden } from '../../../app/garden-context';
-import { LineIcon } from '../../../components/PixelIcon';
+import { LineIcon } from '../../../components/Illustration';
 export function TaskList({ projectId, writable }: { projectId: string; writable: boolean }) {
   const { tasks, busy, toggleTask, addTask, editTask, deleteTask } = useGarden();
   const [editing, setEditing] = useState<string | null>(null);

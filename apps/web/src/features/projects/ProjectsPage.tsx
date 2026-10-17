@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useGarden } from '../../app/garden-context';
-import { PixelIcon, LineIcon } from '../../components/PixelIcon';
+import { ArtIcon, LineIcon } from '../../components/Illustration';
+import { ProjectTree } from '../../components/GardenVisuals';
 import { PageHeading } from '../../components/PageHeading';
 export function ProjectsPage() {
   const { projects } = useGarden();
@@ -48,7 +49,7 @@ export function ProjectsPage() {
           <Link className="project-card" key={project.id} to={`/projects/${project.id}`}>
             <div className="project-card-top">
               <span className={`project-icon ${project.color}`}>
-                <PixelIcon name={project.icon} size={48} />
+                <ProjectTree stage={project.growth.stageIndex} size={65} />
               </span>
               <div>
                 <h3>{project.name}</h3>
@@ -84,7 +85,7 @@ export function ProjectsPage() {
         种下一个新方向
       </Link>
       <div className="gentle-note">
-        <PixelIcon name="mascot" size={48} />
+        <ArtIcon name="mascot" size={48} />
         <p>
           每一条人生线程，
           <br />

@@ -50,6 +50,6 @@ garden_entity_links 是不可重复的身份绑定索引，以用户、绑定类
 
 ## V1.1 兼容与视图
 
-`styles/garden.css` 单独管理树林与收获界面样式；`GardenVisuals.tsx` 集中渲染像素树、五档目标苹果和果篮；GoalCard 负责多目标与主要目标选择，ResultsList 区分树上待摘与已收获。HomePage 只组合项目森林，不实现业务计数规则。
+`styles/journal.css` 管理水彩手帐主题、树林和收获场景；`Illustration.tsx` 统一引用参考素材和操作图标；`GardenVisuals.tsx` 集中渲染四阶段树、五档目标苹果和果篮；GoalCard 负责多目标与主要目标选择，ResultsList 区分树上待摘与已收获。HomePage 只组合项目森林，不实现业务计数规则。
 
 本次不改变数据库事实存储方式，使用兼容的可选 `Project.treeStageThreshold` 和已有 Record.goalId/contribution、Result.harvestedAt。旧快照没有阈值时默认 2，不清空、不自动补录收获。API project 保留旧 `goal` 字段并新增完整 `goals`，record 新增关联与贡献，便于旧客户端兼容读取。

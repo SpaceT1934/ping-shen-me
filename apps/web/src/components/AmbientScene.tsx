@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react';
-import { PixelIcon } from './PixelIcon';
-
-// 场景自身保持固定，只让局部叶簇和几片小叶子轻微运动。
+import { Illustration, type MascotMood } from './Illustration';
 export function AmbientScene({ indoor = false }: { indoor?: boolean }) {
   const [paused, setPaused] = useState(() => document.hidden);
   useEffect(() => {
@@ -11,26 +9,22 @@ export function AmbientScene({ indoor = false }: { indoor?: boolean }) {
   }, []);
   return (
     <div
-      className={`ambient-scene ${indoor ? 'indoor-breeze' : 'orchard-breeze'} ${paused ? 'motion-paused' : ''}`}
+      className={`journal-ambient ${indoor ? 'paper-ambient' : 'garden-ambient'} ${paused ? 'motion-paused' : ''}`}
       aria-hidden="true"
     >
-      <div className="ambient-canopy" />
       {!indoor && (
-        <div className="drifting-leaves">
-          <i />
-          <i />
-          <i />
-        </div>
+        <>
+          <span className="journal-spark spark-a">✦</span>
+          <span className="journal-spark spark-b">✧</span>
+        </>
       )}
     </div>
   );
 }
-
-export function LivingMascot({ size }: { size: number }) {
+export function LivingMascot({ size, mood = 'welcome' }: { size: number; mood?: MascotMood }) {
   return (
-    <span className="living-mascot" aria-hidden="true">
-      <PixelIcon name="mascot" size={size} className="mascot-body" />
-      <PixelIcon name="mascot" size={size} className="mascot-leaves" />
+    <span className={`journal-mascot mascot-${mood}`} aria-hidden="true">
+      <Illustration name={`mascot-${mood}`} size={size} />
     </span>
   );
 }

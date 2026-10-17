@@ -1,10 +1,10 @@
 import { NavLink, Outlet, ScrollRestoration, useLocation } from 'react-router-dom';
-import { LineIcon } from '../components/PixelIcon';
+import { Illustration, LineIcon } from '../components/Illustration';
 const navigation = [
-  ['/', '首页', 'home'],
+  ['/', '我的树', 'home'],
   ['/projects', '项目', 'projects'],
   ['/records', '记录', 'record'],
-  ['/reports', '回顾', 'review'],
+  ['/reports', '成长', 'review'],
   ['/settings', '我的', 'user'],
 ] as const;
 export function AppLayout() {
@@ -22,7 +22,21 @@ export function AppLayout() {
         <nav className="bottom-nav" aria-label="主导航">
           {navigation.map(([path, label, icon]) => (
             <NavLink key={path} to={path} end={path === '/'}>
-              <LineIcon name={icon} size={23} />
+              {icon === 'record' ? (
+                <LineIcon name="plus" size={26} />
+              ) : (
+                <Illustration
+                  name={
+                    {
+                      home: 'nav-tree',
+                      projects: 'nav-folder',
+                      review: 'nav-chart',
+                      user: 'nav-smile',
+                    }[icon]
+                  }
+                  size={25}
+                />
+              )}
               <span>{label}</span>
             </NavLink>
           ))}

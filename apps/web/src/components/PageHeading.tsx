@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { LineIcon } from './PixelIcon';
+import { LineIcon } from './Illustration';
 export function PageHeading({
   title,
   back = '/',

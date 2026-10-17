@@ -5,7 +5,7 @@ import { RouterProvider } from 'react-router-dom';
 import { router } from './app/router';
 import { GardenProvider } from './app/GardenProvider';
 import './styles/global.css';
-import './styles/garden.css';
+import './styles/journal.css';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000, refetchOnWindowFocus: false } },

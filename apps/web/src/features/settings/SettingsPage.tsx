@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { gardenApi } from '../../lib/garden/garden-api';
 import { Link } from 'react-router-dom';
 import { useGarden } from '../../app/garden-context';
-import { LineIcon, PixelIcon } from '../../components/PixelIcon';
+import { LineIcon, ArtIcon } from '../../components/Illustration';
 import { PageHeading } from '../../components/PageHeading';
 export function SettingsPage() {
   const { projects, entries, results } = useGarden();
@@ -31,10 +31,10 @@ export function SettingsPage() {
     <div className="paper-page settings-page">
       <PageHeading title="我的小花园" />
       <div className="profile-card">
-        <PixelIcon name="mascot" size={100} />
+        <ArtIcon name="mascot" size={100} />
         <h2>慢慢长大的你</h2>
         <p>不用着急，按自己的节奏来。</p>
-        <span className="profile-badge">手动记录 · 匿名体验</span>
+        <span className="profile-badge">成长手帐 · 匿名体验</span>
       </div>
       <div className="profile-stats">
         <span>
@@ -59,7 +59,7 @@ export function SettingsPage() {
           <LineIcon name="arrow" size={18} />
         </Link>
         <Link to="/welcome">
-          <PixelIcon name="apple" size={27} />
+          <ArtIcon name="apple" size={27} />
           关于苹什么
           <LineIcon name="arrow" size={18} />
         </Link>

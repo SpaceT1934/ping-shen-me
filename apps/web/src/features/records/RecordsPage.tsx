@@ -5,7 +5,7 @@ import { manualDraftSchema, type ManualDraft } from '@apple/contracts';
 import { z } from 'zod';
 import { useGarden } from '../../app/garden-context';
 import { PageHeading } from '../../components/PageHeading';
-import { LineIcon, PixelIcon } from '../../components/PixelIcon';
+import { LineIcon, ArtIcon } from '../../components/Illustration';
 import { AmbientScene, LivingMascot } from '../../components/AmbientScene';
 import { createUuid } from '../../lib/uuid';
 import { EntryList } from '../projects/components/EntryList';
@@ -141,7 +141,7 @@ export function RecordsPage() {
       <div className="paper-page confirm-page">
         <PageHeading title="确认今天的小进步" onBack={() => setConfirming(false)} />
         <div className="confirm-intro">
-          <PixelIcon name="mascot" size={62} />
+          <ArtIcon name="mascot" size={62} />
           <p>
             把今天的努力安放好，
             <br />
@@ -167,7 +167,7 @@ export function RecordsPage() {
                   </p>
                 )}
                 <div className="draft-card-top">
-                  <PixelIcon name={project?.icon || 'apple'} size={44} />
+                  <ArtIcon name={project?.icon || 'apple'} size={44} />
                   <div className="draft-selects">
                     <select
                       aria-label="关联项目"

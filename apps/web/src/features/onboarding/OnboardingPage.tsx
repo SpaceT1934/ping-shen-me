@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useGarden } from '../../app/garden-context';
-import { LineIcon, PixelIcon, type SpriteName } from '../../components/PixelIcon';
+import { LineIcon, ArtIcon, type SpriteName } from '../../components/Illustration';
 import { PageHeading } from '../../components/PageHeading';
 import { AmbientScene, LivingMascot } from '../../components/AmbientScene';
 import { GoalFields, defaultGoal } from '../projects/components/GoalFields';
@@ -10,7 +10,7 @@ export function WelcomePage() {
   const { startGarden, busy } = useGarden();
   const navigate = useNavigate();
   return (
-    <div className="welcome-scene">
+    <div className="welcome-scene journal-welcome">
       <AmbientScene />
       <button
         disabled={busy}
@@ -22,26 +22,46 @@ export function WelcomePage() {
         看看我的树 →
       </button>
       <div className="welcome-brand">
-        <PixelIcon name="apple" size={54} />
-        <h1>苹什么</h1>
+        <h1>
+          苹什么
+          <span>
+            <ArtIcon name="green" size={29} />
+          </span>
+        </h1>
         <p>
-          把所有的努力，
-          <br />
-          种成一棵树。
+          用行动，养大每一棵树 <span>♥</span>
         </p>
       </div>
-      <div className="welcome-sign wood-label">
-        一边做很多事，
+      <div className="welcome-message">
+        把想做的事
         <br />
-        一边慢慢长大。
+        种成一棵棵树
+        <br />
+        <span>
+          在每一次行动中
+          <br />
+          慢慢长大～
+        </span>
       </div>
       <div className="welcome-mascot">
-        <LivingMascot size={115} />
+        <LivingMascot size={245} />
       </div>
-      <Link to="/seed" className="dark-button welcome-cta">
-        开始种下我的树
-        <LineIcon name="arrow" size={20} />
+      <div className="welcome-sign">
+        小行动
+        <br />
+        也能长成
+        <br />
+        大梦想 <span>♥</span>
+      </div>
+      <Link to="/seed" className="coral-button welcome-cta">
+        开始种下我的树 <LineIcon name="arrow" size={23} />
       </Link>
+      <div className="welcome-dots" aria-hidden="true">
+        <i />
+        <i />
+        <i />
+        <i />
+      </div>
     </div>
   );
 }
@@ -99,7 +119,7 @@ export function SeedPage() {
               className={icon === item ? 'selected' : ''}
               onClick={() => setIcon(item)}
             >
-              <PixelIcon name={item} size={36} />
+              <ArtIcon name={item} size={36} />
             </button>
           ))}
         </div>

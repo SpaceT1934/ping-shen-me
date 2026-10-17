@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 import type { GardenState, GoalInput, ManualDraft, Feedback, Command } from '@apple/contracts';
-import type { SpriteName } from '../components/PixelIcon';
+import type { SpriteName } from '../components/Illustration';
 import type { createGardenView } from '../lib/garden/view-model';
 type GardenView = ReturnType<typeof createGardenView>;
 type Context = GardenView & {

@@ -1,44 +1,71 @@
-# 像素风 UI 素材与生成记录
+# 水彩手帐 UI 素材与场景
 
-使用内置 image_gen 生图工具，以 PRD 中的示例图作为风格参考，分别生成独立背景和一张透明图标精灵图。正文、按钮、输入框和列表均为网页组件，图片中不包含界面文字。
+更新：2026-10-17。当前 UI 使用「移动端参考图.zip」以及同日拆出的「苹什么_新移动端_Figma与独立素材」素材包，替换此前的像素风。原始切片、透明重建、独立背景和 SVG 操作图标均已归入运行时素材库；页面按业务需要组合使用，不把参考图中的文字、手机边框或示例数据烘焙进界面。
 
-## 最终素材
+## 工程位置
 
-- `apps/web/public/assets/pixel/orchard.webp`：首页、品牌页、成长和果实页面的果园背景，1024 × 1536。由同目录的 PNG 原图压缩得到。
-- `apps/web/public/assets/pixel/room.webp`：记录、种子引导和项目详情的暖光房间背景，1024 × 1536。由同目录的 PNG 原图压缩得到。
-- `apps/web/public/assets/pixel/sprites-v2.webp`：无损透明精灵图，1536 × 1024，四列两行，包含苹果角色、三色苹果、视频、书籍、公文包、日历。PNG 原图保留用于后续编辑。
-- `sprites.png`：第一版图标素材，仅保留为生成过程参考；实际界面使用 v2。
+- `apps/web/public/assets/journal/`：优化后的 WebP、23 个 SVG 操作图标、字体及授权。
+- `manifest.json`：素材来源清单；相同名称优先使用透明重建版。
+- `apps/web/src/components/Illustration.tsx`：插画、角色和操作图标统一入口，保留已有项目的图标键兼容性。
+- `apps/web/src/components/GardenVisuals.tsx`：四阶段树、五档成熟度苹果、真实收获数果篮。
+- `apps/web/src/components/AmbientScene.tsx`：轻微角色呼吸与星光动效。
+- `apps/web/src/styles/journal.css`：水彩、奶油纸张、手写字体、珊瑚按钮和场景排版。
+- `apps/web/src/lib/garden/activity-chart.ts`：按报告区间和真实行动时间生成图表，不补造统计数据。
 
-基础导航与操作符号采用 SVG，颜色与尺寸可随交互状态变化。生成素材会接近参考的风格，但不是参考图逐像素的复制。
+字体使用 Google Fonts 的 Ma Shan Zheng，按界面汉字与 ASCII 子集化为 WOFF2，采用 `font-display: swap`；缺字使用系统楷体或中文字体。授权保留在 `FONT-LICENSE.txt`。
 
-## 页面体验范围
+## 场景对应
 
-`/` 首页；`/welcome` 品牌页；`/seed` 手动创建方向；`/projects` 项目列表；`/projects/:id` 项目详情；`/records` 文字记录与确认；`/growth` 成长反馈；`/fruit?project=:id` 果实；`/reports` 报告；`/settings` 个人页。
+| 页面           | 参考构图与实现                                                   |
+| -------------- | ---------------------------------------------------------------- |
+| 欢迎           | 天空、云朵、花草背景；标题、粉色对话、红苹果角色、木牌与珊瑚按钮 |
+| 我的树林       | 共享草地，各项目独立小树、木牌、目标苹果、进度便签及果篮         |
+| 创建、记录     | 草地角色对话头部，下方奶油纸张表单、语音及确认操作               |
+| 项目列表、详情 | 纸张卡片、树木插画、四阶段图鉴、多目标及行动历史                 |
+| 成长反馈       | 角色与对话气泡、行动统计、浇水项目列表                           |
+| 成熟、收获     | 草地、项目对应阶段的树、真实成熟果实、接果角色与果篮             |
+| 报告、我的     | 统一纸张、手绘图标；行动柱状图和累计折线由后端统计区间与记录生成 |
 
-当前项目、记录、成长与成果由后端数据库持久化；旧版浏览器体验数据会一次性迁移并保留原缓存。身份使用独立匿名会话。AI 草稿与语音转写已接入，语音需要确认额度后在配置中启用。完整手动规则见 `manual-v1.md`，AI 接入细节见根目录 `AI接入说明.md`。
+项目是树、目标是苹果。树按手动收获数升级；树上苹果按各目标的确认进度显示。原图树上固定的装饰苹果不参与实时数据渲染，避免与真实目标数量冲突。果篮图示表示空/非空，旁边数字为真实收获数。
 
-## 开始页与轻微动效
+参考图中的问卷、提醒、分享海报及其他超出 PRD V1.1 的功能没有因此新增。实际导航、文字、表单和数据仍为网页组件。旧 `assets/pixel/orchard.webp` 暂保留兼容现有部署健康检查，界面不再引用。
 
-首次访问根路径会进入 `/welcome`。点击“看看我的树”或完成手动创建后，后端保存该会话用户的引导状态，此后根路径直接进入首页。
+## 同风格补充资产
 
-果园使用局部遮罩让叶簇轻微摆动，背景、树干、标题和操作按钮保持固定。小苹果分为身体与头顶叶子两层，分别呈现低幅度呼吸和缓慢摆动；少量飘叶采用错开的长周期，不持续占据视线。输入场景的植物同样只做轻微摆动。
+使用内置 image_gen 编辑原素材，补出以下五张透明 PNG，随后裁切透明留白、优化为 WebP。原 PNG 保存在本地 `design-export/journal-supplement/`，不随应用发布。
 
-环境动效在页面进入后台时暂停；系统设置 `prefers-reduced-motion: reduce` 时所有动画停用，飘叶隐藏。没有新增图片素材。
+| 运行时文件              | 原始 PNG               | 用途                                   |
+| ----------------------- | ---------------------- | -------------------------------------- |
+| `tree-bare.webp`        | `tree-bare.png`        | 去掉固定装饰果实，动态叠加实际目标苹果 |
+| `tree-sprout.webp`      | `tree-sprout.png`      | 独立透明两叶小树苗                     |
+| `basket-empty.webp`     | `basket-empty.png`     | 空果篮，按真实收获状态显示苹果         |
+| `goal-fruit-green.webp` | `goal-fruit-green.png` | 独立透明青苹果与成熟度变化             |
+| `goal-fruit-red.webp`   | `goal-fruit-red.png`   | 独立透明红苹果、成熟与摘果动画         |
 
-## 完整提示词
+所有补充素材都从这套参考图编辑，保持水彩质感、暖棕描边及原始造型。角色采用已拆出的 welcome、wink、cheer、feedback、harvest 等透明姿态。
 
-### orchard
+## 完整生成提示词
 
-Use case: stylized-concept. Create a production background asset for a mobile pixel-art life-growth app, inspired very closely by the orchard screens in the supplied PRD reference. Reference is style and composition only. Portrait 1024x1536. Rich cozy handcrafted 16-bit pixel art with clearly visible square pixels and crisp stepped edges, lush green and olive leaves, huge beautiful apple tree centered, broad branching brown trunk, blue sky with soft cream clouds, warm afternoon light, small flowers and grass, a wooden fence at the lower right. Tree crown spans the middle 35%-75% of the scene with four open spots on the branches for interactive apple sprites added in code. Top 25% is mostly blue sky for UI overlays. Bottom 20% grass clearing for mascot. No apples or fruit, no characters, no text, no letters, no UI, no phone frame, no watermark. Match the reference's charming pixel game environment rather than photorealism.
+### tree-bare
 
-### room
+Use case: precise-object-edit. Production transparent UI asset for the SAME hand-painted journal app. Edit target: supplied tree. Remove ONLY the two green/yellow apple fruits and reconstruct the matching turquoise/lime watercolor leaf canopy behind them. Preserve exactly the existing tree silhouette, branches, brown trunk, warm dark-brown hand-drawn outline, watercolor texture and white sticker edge. Entire tree fully visible, closely cropped with small safe transparent margins. Genuine transparent alpha background. NO fruit, NO text, NO ground, NO extra objects. Do not redesign or change style.
 
-Use case: stylized-concept. Create a production background asset for the cozy indoor seed-dialogue and project-detail screens of a mobile pixel-art app. Match the supplied PRD reference's sunlit potting room closely: wooden window on left, warm peach plaster walls, timber shelves, little terracotta pots with green plants along both sides, warm golden sunlight falling diagonally across wall and floor, rich pixel detail. Portrait 1024x1536, handmade 16-bit pixel art with crisp square pixels, stepped edges and warm brown outlines. Center area should be quiet open warm peach wall to support speech bubble overlay; bottom center a patch of soft soil on wooden floor for a separately rendered mascot. No characters, no text, no icons, no UI, no phone frame, no watermark.
+### basket-empty
 
-### sprites
+Use case: precise-object-edit. Edit the supplied warm hand-painted wicker fruit basket for this exact journal app. Keep the same oval wicker basket shape, woven tan/orange texture and warm dark-brown hand-drawn outline. Remove ALL apples, leaves, sparkles, ground and background, leaving an EMPTY basket with visible empty interior. Reconstruct hidden rim carefully. Full basket closely framed with small transparent margins, genuinely transparent alpha background. Same cheerful watercolor illustration style, NO text, no shadows outside basket.
 
-Use case: stylized-concept. Generate a single production UI sprite atlas, inspired closely by the supplied PRD pixel-art app. Actual transparent background, no ground, no checkerboard drawn. Landscape 1536x1024. Exactly 4 columns by 2 rows of equal cells, centers precisely evenly spaced. Each isolated sprite must fit within central 65% of its cell with generous transparent margins and no overlapping cells. Row 1 left to right: (1) cheerful round cream-white baby apple mascot with two green sprout leaves on head, tiny brown eyes and smile, peach pink cheeks, stubby arms and feet; (2) red/pink ripe apple with green leaf and bold stepped dark brown outline; (3) golden yellow apple with leaf same style; (4) green apple with leaf same style. Row 2 left to right: (1) green rounded film slate / video play icon; (2) blue open study book icon; (3) warm brown professional briefcase icon; (4) small beige pixel calendar with coral tabs. Coherent adorable detailed 16-bit pixel art, crisp visible square pixels, warm outlines, subtle highlights, exactly matching the charming PRD sprites. No text, no letters, no labels, no gridlines, no shadows outside sprites, no UI, no watermark.
+### tree-sprout
 
-### sprites v2 透明边缘修订
+Use case: background-extraction. Edit target is this tiny hand-painted green sprout in a small tan soil patch. Isolate the COMPLETE sprout including two green leaves, stem and its own small soil patch. Remove surrounding forest/grass/background. Preserve original shape, dark warm brown outline and watercolor texture, closely matching the provided reference. High quality transparent alpha asset with small safe margins, no new elements, no letters, no frame.
 
-Use case: background-extraction. Edit this sprite atlas by removing EVERY colored glow, shadow, gradient and background haze around the eight icons. Preserve the eight icons themselves exactly, their pixel outlines, colors, positions, cell spacing, canvas dimensions and shapes. Pixels outside the actual solid icon silhouettes must have alpha exactly zero. Pixels inside the silhouettes including dark brown outlines must be opaque. No glow, no ambient shadow, no gray/black backgrounds or checkerboard. This is a production transparent sprite sheet for CSS compositing on bright backgrounds. Keep the 4 columns 2 rows arrangement. Genuine transparent background.
+### goal-fruit-green
+
+Use case: background-extraction. Production standalone UI green apple from the supplied cutout. Preserve exactly this squat green apple shape, brown curved stem, green leaf, dark green hand-drawn outline and pale highlights, same watercolor journal illustration. Remove all cream/green background and other surrounding elements. Reconstruct a clean full isolated apple, large enough for UI, close framing and small safe transparent margins. Genuine transparent alpha. No text, no ground, no mascot face, no additional fruit.
+
+### goal-fruit-red
+
+Use case: background-extraction. First image is edit target: isolate its red apple alone. Second image is supporting reference for apple proportions/style consistency. Preserve the warm coral-red apple, brown stem, green leaf, dark hand-drawn outline, white highlight and watercolor texture. Remove all background and orange emphasis strokes. Full isolated red apple closely framed with small transparent margins. Genuine transparent alpha. No text, no ground, no face, no extra fruit. Match the existing hand-painted journal UI illustration.
+
+## 动效与加载
+
+角色低幅度呼吸、星光缓慢明暗、摘果后落入果篮。所有动效尊重 `prefers-reduced-motion`，后台暂停环境动效。背景 WebP、独立插画及本地字体共享浏览器缓存；不在页面间下载整张截图。

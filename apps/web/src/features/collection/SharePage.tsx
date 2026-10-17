@@ -102,6 +102,11 @@ export function SharePage() {
       (!project || task.projectId === project.id),
   ).length;
   const quote = '每一次认真行动，都在让理想的自己更靠近一点。';
+  const summaryTitle = result
+    ? `用 ${result.days} 天，收获一颗果实`
+    : `今天完成了 ${completedTasks} 个小任务`;
+  const summaryDetail = `${project?.name || prefs.name} · ${result?.title || '每一步，都算数'}`;
+  const backgroundName = theme === 'garden' ? 'welcome-background' : `theme-${theme}`;
   const save = async (share: boolean) => {
     setBusy(true);
     setError('');
@@ -110,54 +115,48 @@ export function SharePage() {
       await document.fonts.ready;
       await document.fonts.load(
         '40px JournalHand',
-        `${day}${weekday}${quote}${result?.title || ''}${project?.name || prefs.name}小行动，也能长成大梦想用天次收获这颗果实今天完成了个小任务苹什么每一步都算数`,
+        `${day}${weekday}${quote}${summaryTitle}${summaryDetail}小行动，也能长成大梦想用天次收获这颗果实今天完成了个小任务苹什么每一步都算数`,
       );
       const canvas = document.createElement('canvas');
       canvas.width = 780;
-      canvas.height = 1320;
+      canvas.height = 1060;
       const context = canvas.getContext('2d');
       if (!context) throw new Error('当前浏览器不能生成图片');
-      context.fillStyle = {
-        garden: '#fffcf5',
-        night: '#e5e9f4',
-        sea: '#e7f3ef',
-        sunset: '#fff0df',
-      }[theme];
-      context.fillRect(0, 0, 780, 1320);
-      const [background, mascot, sun, leaf] = await Promise.all(
-        ['forest-background', 'mascot-cheer', 'sun', 'leaf-falling'].map((name) =>
+      context.fillStyle = '#fff8e9';
+      context.fillRect(0, 0, 780, 1060);
+      const [background, mascot, sun, leaf, sprout] = await Promise.all(
+        [backgroundName, 'mascot-cheer', 'sun', 'leaf-falling', 'sprout'].map((name) =>
           image(`/assets/figma21/${name}.webp`),
         ),
       );
-      drawArt(context, background!, 30, 250, 720, 350, true);
-      drawArt(context, mascot!, 285, 365, 210, 180);
-      drawArt(context, sun!, 52, 275, 50, 50);
-      drawArt(context, leaf!, 674, 330, 40, 40);
-      context.fillStyle = '#4a2c1e';
-      context.textAlign = 'center';
+      drawArt(context, background!, 28, 30, 724, 936, true);
+      drawArt(context, mascot!, 320, 530, 240, 224);
+      if (theme === 'garden') {
+        drawArt(context, sun!, 480, 55, 86, 90);
+        drawArt(context, leaf!, 495, 365, 69, 61);
+      }
+      context.fillStyle = theme === 'night' ? '#fff8e9' : '#4a2c1e';
+      context.textAlign = 'left';
       context.font = '64px JournalHand';
-      context.fillText(day, 390, 100);
-      context.font = '30px JournalHand';
-      context.fillText(weekday, 390, 155);
-      context.fillText('苹什么 · 每一步，都算数', 390, 211);
+      context.fillText(day, 96, 165);
+      context.font = '38px JournalHand';
+      context.fillText(weekday, 106, 225);
       context.font = '40px JournalHand';
       ['每一次认真行动，', '都在让理想的自己', '更靠近一点。'].forEach((line, index) =>
-        context.fillText(line, 390, 680 + 48 * index),
+        context.fillText(line, 100, 335 + 58 * index),
       );
-      let y = 824;
-      context.font = '30px JournalHand';
-      y = wrap(context, result?.title || project?.name || prefs.name, y + 24, 650);
-      wrap(
-        context,
-        result
-          ? `用 ${result.days} 天、${result.actionCount} 次行动，收获这颗果实。`
-          : `今天完成了 ${completedTasks} 个小任务。`,
-        y + 18,
-        650,
-      );
+      context.fillStyle = '#fffcf5';
+      context.beginPath();
+      if (typeof context.roundRect === 'function') context.roundRect(94, 788, 566, 158, 24);
+      else context.rect(94, 788, 566, 158);
+      context.fill();
+      drawArt(context, sprout!, 112, 834, 64, 64);
       context.fillStyle = '#807b72';
+      context.textAlign = 'center';
       context.font = '28px JournalHand';
-      context.fillText('小行动，也能长成大梦想', 390, 1250);
+      wrap(context, summaryTitle, 842, 420, 1);
+      wrap(context, summaryDetail, 900, 420, 1);
+      context.fillText('苹什么 · 小行动，也能长成大梦想', 390, 1020);
       const blob = await new Promise<Blob>((resolve, reject) =>
         canvas.toBlob(
           (value) => (value ? resolve(value) : reject(new Error('生成失败，请重试'))),
@@ -193,32 +192,40 @@ export function SharePage() {
     <div className="paper-page">
       <PageHeading title="日签分享" back="/collection" />
       <div className={`fig-share-card share-theme-${theme}`}>
-        <div className="share-date">{day}</div>
-        <p>{weekday}</p>
-        <div className="share-illustration">
-          <Illustration name="mascot-cheer" size={145} />
-          <span className="share-decoration-sun">
-            <Illustration name="sun" size={34} />
+        <div
+          className="share-poster"
+          style={{ backgroundImage: `url('/assets/figma21/${backgroundName}.webp')` }}
+        >
+          <div className="share-date">{day}</div>
+          <p className="share-weekday">{weekday}</p>
+          <h2 className="share-quote">
+            每一次认真行动，
+            <br />
+            都在让理想的自己
+            <br />
+            更靠近一点。
+          </h2>
+          <span className="share-poster-mascot">
+            <Illustration name="mascot-cheer" size={120} />
           </span>
-          <span className="share-decoration-leaf">
-            <Illustration name="leaf-falling" size={28} />
-          </span>
+          {theme === 'garden' && (
+            <>
+              <span className="share-decoration-sun">
+                <Illustration name="sun" size={43} />
+              </span>
+              <span className="share-decoration-leaf">
+                <Illustration name="leaf-falling" size={35} />
+              </span>
+            </>
+          )}
+          <div className="share-summary">
+            <Illustration name="sprout" size={34} />
+            <div>
+              <p>{summaryTitle}</p>
+              <p title={summaryDetail}>{summaryDetail}</p>
+            </div>
+          </div>
         </div>
-        <h2>
-          每一次认真行动，
-          <br />
-          都在让理想的自己
-          <br />
-          更靠近一点。
-        </h2>
-        <p>{result?.title || project?.name || prefs.name}</p>
-        <p>
-          {result
-            ? `${result.days} 天，${result.actionCount} 次行动，收获一颗果实。`
-            : `今天完成了 ${completedTasks} 个小任务。`}
-        </p>
-        <p>每一步，都算数。</p>
-        <small>苹什么 · 用行动，养大每一棵树</small>
       </div>
       <div className="share-theme-choices" aria-label="日签主题">
         {(['garden', 'sea', 'sunset', 'night'] as const).map((item, index) => (
@@ -228,12 +235,12 @@ export function SharePage() {
           </button>
         ))}
       </div>
-      <div className="button-row share-actions">
-        <button className="outline-button" disabled={busy} onClick={() => void save(false)}>
-          保存图片
+      <div className="share-actions">
+        <button className="coral-button full-width" disabled={busy} onClick={() => void save(true)}>
+          保存并分享
         </button>
-        <button className="coral-button" disabled={busy} onClick={() => void save(true)}>
-          分享日签
+        <button className="text-button full-width" disabled={busy} onClick={() => void save(false)}>
+          仅保存图片
         </button>
       </div>
       {error && <p role="alert">{error}</p>}

@@ -8,6 +8,13 @@ health=$site/api/v1/health/ready
 # Connect locally while verifying the public IP certificate and HTTPS response.
 tls_check=(-fsS --max-time 3 --resolve 211.159.160.11:8105:127.0.0.1)
 
+if [[ ${SSH_ORIGINAL_COMMAND:-} =~ ^check-release\ ([0-9a-f]{40})$ ]]; then
+  test "$(readlink "$base/current")" = "releases/${BASH_REMATCH[1]}"
+  curl "${tls_check[@]}" "$health" | grep -q '"status":"ok"'
+  curl "${tls_check[@]}" -o /dev/null "$site/welcome"
+  exit
+fi
+
 if [[ ${SSH_ORIGINAL_COMMAND:-} =~ ^check-deps\ ([0-9a-f]{64})$ ]]; then
   expected=${BASH_REMATCH[1]}
   test -d "$base/current/apps/api/node_modules"

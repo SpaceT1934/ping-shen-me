@@ -1145,3 +1145,111 @@ body {
     padding-left: 10px;
   }
 }
+.fig-share-card {
+  padding: 0;
+  position: relative;
+  container-type: inline-size;
+  background: var(--cream);
+}
+.share-poster {
+  position: relative;
+  height: 128.8cqw;
+  margin: 12px;
+  border-radius: 12px;
+  background-position: center;
+  background-size: cover;
+  text-align: left;
+  overflow: hidden;
+}
+.share-poster .share-date {
+  position: absolute;
+  left: 6.2%;
+  top: 5.5%;
+  font-size: 9.3cqw;
+  line-height: 1.18;
+}
+.share-poster .share-weekday {
+  position: absolute;
+  left: 7.5%;
+  top: 15.5%;
+  font-size: 5.2cqw;
+  margin: 0;
+}
+.share-poster .share-quote {
+  position: absolute;
+  left: 7%;
+  top: 26%;
+  font-size: 5.8cqw;
+  line-height: 1.35;
+  margin: 0;
+}
+.share-poster-mascot {
+  position: absolute;
+  left: 40%;
+  top: 52.8%;
+  width: 33%;
+  height: 24%;
+}
+.share-poster-mascot > img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.share-poster .share-decoration-sun {
+  left: 61.5%;
+  top: 2.8%;
+}
+.share-poster .share-decoration-leaf {
+  left: 63%;
+  top: 36%;
+}
+.share-summary {
+  position: absolute;
+  left: 8.8%;
+  right: 8.8%;
+  bottom: 6.3%;
+  min-height: 16%;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 9px;
+}
+.share-summary > div {
+  min-width: 0;
+}
+.share-summary p {
+  font-size: 13px;
+  color: #807b72;
+  margin: 3px 0;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.share-theme-night .share-date,
+.share-theme-night .share-weekday,
+.share-theme-night .share-quote {
+  color: #fff8e9;
+}
+.share-theme-choices button {
+  flex: 1;
+  max-width: 82px;
+}
+.share-theme-choices .journal-art {
+  width: 100%;
+  height: 88px;
+  object-fit: contain;
+}
+.share-actions {
+  display: block;
+  margin: 18px 0 8px;
+}
+.share-actions .coral-button {
+  min-height: 55px;
+}
+.share-actions .text-button {
+  margin-top: 9px;
+}

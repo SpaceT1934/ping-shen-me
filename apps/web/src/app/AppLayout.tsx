@@ -1,22 +1,41 @@
-import { NavLink, Outlet, ScrollRestoration, useLocation } from 'react-router-dom';
-import { Illustration, LineIcon } from '../components/Illustration';
+import { NavLink, Outlet, ScrollRestoration, useLocation, Link } from 'react-router-dom';
+import { useRef } from 'react';
+import { LineIcon } from '../components/Illustration';
+import { useDesignMotion } from '../design/use-design-motion';
+import { useGardenPreferences } from '../features/settings/use-garden-preferences';
 const navigation = [
   ['/', '我的树', 'home'],
   ['/projects', '项目', 'projects'],
   ['/records', '记录', 'record'],
-  ['/reports', '成长', 'review'],
+  ['/reports', '生长', 'review'],
   ['/settings', '我的', 'user'],
 ] as const;
 export function AppLayout() {
   const { pathname } = useLocation();
-  const immersive = ['/welcome', '/seed', '/growth', '/fruit'].includes(pathname);
+  const surface = useRef<HTMLElement>(null);
+  useDesignMotion(surface, pathname);
+  const { notice } = useGardenPreferences();
+  const immersive = [
+    '/welcome',
+    '/seed',
+    '/seed/ai',
+    '/growth',
+    '/fruit',
+    '/share',
+    '/quiz',
+  ].includes(pathname);
   return (
     <div
       className={`app-shell ${pathname === '/' ? 'home-shell' : ''} ${immersive ? 'immersive-shell' : ''}`}
     >
-      <main>
+      <main ref={surface}>
         <Outlet />
       </main>
+      {notice && !immersive && (
+        <Link className="garden-reminder" to={notice.to}>
+          {notice.text} →
+        </Link>
+      )}
       <ScrollRestoration />
       {!immersive && (
         <nav className="bottom-nav" aria-label="主导航">
@@ -25,14 +44,14 @@ export function AppLayout() {
               {icon === 'record' ? (
                 <LineIcon name="plus" size={26} />
               ) : (
-                <Illustration
+                <LineIcon
                   name={
                     {
-                      home: 'nav-tree',
-                      projects: 'nav-folder',
-                      review: 'nav-chart',
-                      user: 'nav-smile',
-                    }[icon]
+                      home: 'home',
+                      projects: 'projects',
+                      review: 'review',
+                      user: 'user',
+                    }[icon] as 'home' | 'projects' | 'review' | 'user'
                   }
                   size={25}
                 />

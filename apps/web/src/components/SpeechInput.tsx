@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { aiApi } from '../lib/ai-api';
 import { pickRecordingType, recordingToWav } from '../lib/speech-audio';
+import { LineIcon } from './Illustration';
 
 function toBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -41,6 +42,8 @@ export function SpeechInput({
   const cancelled = useRef(false);
   const locked = useRef(false);
   const startedAt = useRef(0);
+  const pointer = useRef<{ at: number; y: number; wasRecording: boolean } | null>(null);
+  const stopWhenReady = useRef(false);
   const busy = phase !== 'idle';
   const stopTracks = () => {
     stream.current?.getTracks().forEach((track) => track.stop());
@@ -155,6 +158,11 @@ export function SpeechInput({
         void transcribe(new Blob(chunks, { type: device.mimeType || mime }), context);
       };
       device.start();
+      if (stopWhenReady.current) {
+        cancelled.current = true;
+        device.stop();
+        return;
+      }
       startedAt.current = Date.now();
       setSeconds(0);
       setPhase('recording');
@@ -185,43 +193,56 @@ export function SpeechInput({
           type="button"
           className={`voice-button${recording ? ' is-recording' : ''}`}
           disabled={
-            !enabled ||
-            disabled ||
-            phase === 'permission' ||
-            phase === 'transcribing' ||
-            (!recording && maxChars <= 0)
+            !enabled || disabled || phase === 'transcribing' || (!recording && maxChars <= 0)
           }
-          onClick={() => {
+          onPointerDown={(event) => {
+            if (
+              event.button !== 0 ||
+              disabled ||
+              !enabled ||
+              phase === 'permission' ||
+              phase === 'transcribing'
+            )
+              return;
+            pointer.current = { at: Date.now(), y: event.clientY, wasRecording: recording };
+            stopWhenReady.current = false;
+            event.currentTarget.setPointerCapture(event.pointerId);
+            if (!recording) void start();
+          }}
+          onPointerMove={(event) => {
+            if (pointer.current && pointer.current.y - event.clientY > 55) cancelled.current = true;
+          }}
+          onPointerUp={() => {
+            const gesture = pointer.current;
+            pointer.current = null;
+            if (!gesture) return;
+            if (gesture.wasRecording || Date.now() - gesture.at >= 350 || cancelled.current) {
+              if (recorder.current?.state === 'recording') recorder.current.stop();
+              else stopWhenReady.current = true;
+            }
+          }}
+          onPointerCancel={() => {
+            pointer.current = null;
+            cancelled.current = true;
+            stopWhenReady.current = true;
+            if (recorder.current?.state === 'recording') recorder.current.stop();
+          }}
+          onClick={(event) => {
+            // Pointer gestures are handled above; keyboard/assistive activation still toggles recording.
+            if (event.detail !== 0) return;
+            stopWhenReady.current = false;
             if (!recording) void start();
             else if (recorder.current?.state === 'recording') recorder.current.stop();
           }}
         >
-          <svg
-            aria-hidden="true"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          >
-            {recording ? (
-              <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" />
-            ) : (
-              <>
-                <rect x="9" y="2" width="6" height="13" rx="3" />
-                <path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8" />
-              </>
-            )}
-          </svg>
+          <LineIcon name="mic" size={20} />
           {phase === 'permission'
             ? '请允许麦克风…'
             : phase === 'transcribing'
               ? '正在转成文字…'
               : recording
                 ? `结束录音 · ${seconds}s`
-                : '点击说话'}
+                : '按住说话 / 点击录音'}
         </button>
         {recording && (
           <button
@@ -239,7 +260,7 @@ export function SpeechInput({
       <p className="small-print" role="status" aria-live="polite">
         {error ||
           (recording
-            ? '正在听你说，最长 60 秒；点击结束后转成可编辑的文字。'
+            ? '正在听你说，最长 60 秒；长按松开发送，上滑取消；点按录音可再次点击结束。'
             : phase === 'transcribing'
               ? '正在识别录音，文字确认后才会保存。'
               : capabilities.isPending
@@ -247,7 +268,7 @@ export function SpeechInput({
                 : enabled
                   ? !window.isSecureContext
                     ? '手机录音需要 HTTPS 地址，当前可以先输入文字。'
-                    : '点击后开始录音，再次点击结束；录音不会保存到项目中。'
+                    : '按住说话，松开转文字；也可以点按开始、再次点击结束。'
                   : '语音服务暂不可用，可以先输入文字。')}
       </p>
     </div>

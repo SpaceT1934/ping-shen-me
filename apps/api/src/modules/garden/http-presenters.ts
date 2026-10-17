@@ -27,6 +27,7 @@ export const projectDto = (state: GardenState, project: Project) => {
   return {
     id: project.id,
     name: project.name,
+    category: project.category,
     status: project.status,
     goal: goal ? goalDto(goal) : null,
     goals: state.goals

@@ -11,13 +11,15 @@ export function GoalFruit({ percent, size = 40 }: { percent: number; size?: numb
       aria-label={`${labels[stage]}，进度 ${Math.round(percent)}%`}
     >
       <span className="fruit-base">
-        <Illustration name={stage === 4 ? 'goal-fruit-red' : 'goal-fruit-green'} size={size} />
+        <Illustration
+          name={
+            ['fruit-green', 'fruit-green', 'fruit-orange', 'fruit-transition-orange', 'fruit-red'][
+              stage
+            ]!
+          }
+          size={size}
+        />
       </span>
-      {stage === 3 && (
-        <span className="fruit-blush">
-          <Illustration name="goal-fruit-red" size={size} />
-        </span>
-      )}
     </span>
   );
 }
@@ -29,7 +31,10 @@ export function ProjectTree({ stage, size = 150 }: { stage: number; size?: numbe
       style={{ width: size, height: size }}
       aria-hidden="true"
     >
-      <Illustration name={level === 0 ? 'tree-sprout' : 'tree-bare'} size={size} />
+      <Illustration
+        name={['stage-sprout', 'stage-growing', 'stage-strong', 'stage-full'][level]!}
+        size={size}
+      />
     </span>
   );
 }
@@ -37,10 +42,10 @@ export function FruitBasket({ count }: { count: number }) {
   return (
     <span className="fruit-basket" role="img" aria-label={`果篮，已收获 ${count} 颗`}>
       <span className="basket-art">
-        <Illustration name="basket-empty" size={62} />
+        <Illustration name="basket" size={62} />
         {count > 0 && (
           <span className="basket-fruit">
-            <Illustration name="goal-fruit-red" size={23} />
+            <Illustration name="fruit-red" size={23} />
           </span>
         )}
       </span>

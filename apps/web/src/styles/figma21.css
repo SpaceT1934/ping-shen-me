@@ -1,0 +1,1147 @@
+:root {
+  --ink: #4a2c1e;
+  --cream: #fff8e9;
+  --paper: #fffcf5;
+  --coral: #ff7165;
+  --border: #dccdb8;
+}
+:root {
+  --scene-overlay: transparent;
+  --page-surround: #f7efe1;
+}
+:root[data-theme='night'] {
+  --scene-overlay: #1f31564d;
+  --page-surround: #26334d;
+}
+:root[data-theme='sea'] {
+  --scene-overlay: #48b9c426;
+  --page-surround: #dcefeb;
+}
+:root[data-theme='sunset'] {
+  --scene-overlay: #ff937b33;
+  --page-surround: #f4d8c2;
+}
+body {
+  background: var(--page-surround);
+}
+.app-shell {
+  max-width: 440px;
+  background: var(--cream);
+}
+.journal-mascot,
+.project-tree img,
+.journal-spark {
+  animation: none;
+}
+.journal-art {
+  mix-blend-mode: normal !important;
+}
+.dark-button,
+.coral-button {
+  background: var(--coral);
+  border: 1.5px solid var(--ink);
+  border-radius: 28px;
+  box-shadow: none;
+}
+.outline-button,
+.speech-bubble {
+  border: 1px solid var(--border);
+  box-shadow: none;
+  background: var(--paper);
+  border-radius: 18px;
+}
+.paper-page {
+  background: var(--cream);
+}
+.bottom-nav {
+  height: 66px;
+  bottom: max(10px, env(safe-area-inset-bottom));
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  box-shadow: none;
+  background: #fffcf5f5;
+}
+.bottom-nav a {
+  border: 0;
+  border-radius: 20px;
+  font-size: 14px;
+}
+.bottom-nav a.active {
+  border: 0;
+  box-shadow: none;
+  background: #ffe3b5;
+}
+.fig-welcome {
+  container-type: inline-size;
+  background: #d9efbb url('/assets/figma21/welcome-background.webp') center/cover;
+}
+.fig-welcome-canvas {
+  position: relative;
+  height: max(100dvh, 198.26cqw);
+  overflow: hidden;
+}
+.fig-welcome-canvas > div {
+  position: absolute;
+}
+.fig-welcome-title {
+  left: 14.12%;
+  top: 7.39cqw;
+}
+.fig-welcome-title h1 {
+  margin: 0;
+  font-size: 18.46cqw;
+  line-height: 1.18;
+  font-weight: 400;
+}
+.fig-welcome-tagline {
+  left: 14.12%;
+  top: 36.06cqw;
+  font-size: 6.825cqw;
+  line-height: 1.18;
+  white-space: nowrap;
+}
+.fig-welcome-line {
+  line-height: 1.18;
+  white-space: nowrap;
+}
+.fig-welcome-line.line-0 {
+  left: 29.62%;
+  top: 48.61cqw;
+  font-size: 6.514cqw;
+}
+.fig-welcome-line.line-1 {
+  left: 33.85%;
+  top: 55.66cqw;
+  font-size: 6.559cqw;
+}
+.fig-welcome-line.line-2 {
+  left: 38.9%;
+  top: 64.26cqw;
+  font-size: 6.033cqw;
+}
+.fig-welcome-line.line-3 {
+  left: 56.3%;
+  top: 70.79cqw;
+  font-size: 6.159cqw;
+}
+.fig-welcome-mascot {
+  left: 20%;
+  top: 93.85cqw;
+  width: 59.44%;
+  height: 58.2cqw;
+}
+.fig-welcome-mascot img {
+  width: 100%;
+  height: 100%;
+}
+.fig-welcome-sign {
+  left: 74.77%;
+  top: 90.52cqw;
+  width: 22.91%;
+  height: 26.16cqw;
+  border: 1px solid var(--border);
+  background: #ffe3b5;
+  border-radius: 18px;
+  font-size: 4.2cqw;
+  padding: 2cqw;
+  line-height: 1.5;
+  text-align: center;
+}
+.fig-welcome-button {
+  left: 10.68%;
+  top: 154.14cqw;
+  width: 78.17%;
+}
+.fig-welcome-button a {
+  min-height: 18.27cqw;
+  font-size: 6.15cqw;
+  padding: 10px;
+}
+.fig-header {
+  position: relative;
+  min-height: 220px;
+  padding: 0 16px;
+  background: url('/assets/figma21/forest-background.webp') top center/100% auto;
+}
+.fig-header .page-heading {
+  min-height: 52px;
+}
+.fig-header-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 0 0;
+}
+.fig-header-body .speech-bubble {
+  padding: 16px;
+  flex: 1;
+  font-size: 19px;
+  line-height: 1.5;
+}
+.fig-header-body > img {
+  align-self: flex-end;
+  width: 118px;
+  height: 118px;
+}
+.fig-paper {
+  position: relative;
+  padding: 16px 14px 30px;
+  border-radius: 20px 20px 0 0;
+  background: var(--cream);
+}
+.fig-card {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--paper);
+  padding: 15px;
+  margin-bottom: 12px;
+}
+.fig-card h2,
+.fig-card h3 {
+  margin: 0 0 8px;
+  font-size: 21px;
+}
+.fig-card p {
+  margin: 7px 0;
+  line-height: 1.6;
+}
+.fig-links {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+.fig-links a {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--paper);
+  font-size: 16px;
+}
+.fig-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+  margin: 12px 0;
+}
+.fig-metrics > div {
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  padding: 10px 3px;
+  text-align: center;
+  background: #ecf4de;
+}
+.fig-metrics > div:nth-child(even) {
+  background: #ffebe4;
+}
+.fig-metrics strong {
+  display: block;
+  font-size: 27px;
+  margin: 5px 0;
+}
+.fig-metrics small {
+  font-size: 12px;
+  display: block;
+}
+.fig-filter {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 6px 0 14px;
+}
+.fig-filter button {
+  white-space: nowrap;
+  padding: 6px 15px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--paper);
+  font-size: 15px;
+}
+.fig-filter button[aria-pressed='true'] {
+  background: var(--coral);
+  color: white;
+  border-color: var(--ink);
+}
+.fig-collection {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.fig-collection .fig-card {
+  min-width: 0;
+  margin: 0;
+  padding: 12px;
+}
+.fig-collection h2 {
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+.fig-collection p {
+  font-size: 13px;
+  color: #807b72;
+}
+.fig-timeline-item {
+  display: flex;
+  gap: 12px;
+  position: relative;
+  padding: 0 0 15px;
+}
+.fig-timeline-item::before {
+  content: '';
+  position: absolute;
+  width: 1px;
+  background: var(--border);
+  top: 30px;
+  bottom: -5px;
+  left: 52px;
+}
+.fig-timeline-item time {
+  font-size: 12px;
+  width: 32px;
+  padding-top: 17px;
+  flex-shrink: 0;
+}
+.fig-timeline-item > img {
+  margin-top: 12px;
+  z-index: 1;
+}
+.fig-timeline-item > .fig-card {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+.fig-setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 0;
+}
+.fig-setting-row > span {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.fig-switch {
+  appearance: none;
+  width: 39px;
+  height: 23px;
+  border-radius: 20px;
+  background: #dbd4c6;
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.fig-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  background: white;
+}
+.fig-switch:checked {
+  background: #a2c788;
+}
+.fig-switch:checked::after {
+  left: 18px;
+}
+.fig-theme-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.fig-theme-grid button {
+  border: 2px solid transparent;
+  background: transparent;
+  border-radius: 15px;
+  padding: 5px;
+}
+.fig-theme-grid button[aria-pressed='true'] {
+  border-color: var(--coral);
+}
+.fig-theme-grid img {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+.fig-share-card {
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 24px 20px;
+  background: var(--paper);
+}
+.fig-share-card h2 {
+  font-size: 28px;
+  margin: 15px 0;
+}
+.fig-share-card .share-date {
+  font-size: 42px;
+}
+.fig-share-card .share-illustration {
+  height: 180px;
+  background: url('/assets/figma21/forest-background.webp') center/cover;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+}
+.fig-share-card p {
+  font-size: 19px;
+  line-height: 1.7;
+  margin: 14px 0;
+}
+.fig-category-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 0 18px;
+}
+.fig-category-grid button {
+  border: 1px solid var(--border);
+  background: var(--paper);
+  border-radius: 18px;
+  padding: 12px 3px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  font-size: 15px;
+}
+.fig-category-grid button[aria-pressed='true'] {
+  border-color: #90ae76;
+  background: #ecf4de;
+}
+.ai-chat-page {
+  padding: 0 15px 25px;
+  min-height: 100dvh;
+  background: var(--cream);
+}
+.ai-chat-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 20px 0;
+}
+.ai-chat-message .speech-bubble {
+  flex: 1;
+  padding: 18px 14px;
+  font-size: 20px;
+}
+.ai-chat-page .ai-seed {
+  margin: 20px 0 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  border-radius: 0;
+}
+.ai-chat-page .ai-seed > h2 {
+  font-size: 20px;
+  margin: 12px 0;
+}
+.ai-chat-page .ai-candidate {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 14px;
+}
+.seed-scene {
+  background:
+    linear-gradient(var(--scene-overlay), var(--scene-overlay)),
+    url('/assets/figma21/forest-background.webp') top/100% auto;
+  min-height: 220px;
+}
+.seed-panel {
+  border: 0;
+  background: var(--cream);
+  border-radius: 20px 20px 0 0;
+  padding: 20px 16px 30px;
+}
+.seed-bubble {
+  font-size: 20px;
+  width: 66%;
+  top: 70px;
+  padding: 15px;
+}
+.seed-mascot {
+  bottom: 0;
+  left: 1%;
+}
+.seed-mascot > span > img {
+  width: 120px;
+  height: 120px;
+}
+.forest-home {
+  padding: 17px 14px 24px;
+  min-height: 773px;
+  background:
+    linear-gradient(var(--scene-overlay), var(--scene-overlay)),
+    url('/assets/figma21/forest-background.webp') top/100% auto;
+}
+.forest-heading {
+  min-height: 158px;
+}
+.forest-heading h1 {
+  margin: 0 0 9px 10px;
+  font-size: 34px;
+}
+.forest-heading h1 > img {
+  display: none;
+}
+.forest-heading > div > p:last-child {
+  font-size: 15px;
+  line-height: 1.4;
+  max-width: 195px;
+}
+.forest-report {
+  position: absolute;
+  top: 132px;
+  right: 18px;
+  padding: 5px;
+  width: 34px;
+  height: 34px;
+}
+.forest-companion {
+  position: absolute;
+  top: 18px;
+  right: 8px;
+  margin: 0;
+  width: 155px;
+}
+.forest-companion .speech-bubble {
+  padding: 10px 12px;
+  min-height: 102px;
+  font-size: 14px;
+  width: 100%;
+}
+.forest-companion small {
+  display: none;
+}
+.forest-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 20px;
+  row-gap: 18px;
+  margin: 15px 0 0;
+  align-items: start;
+}
+.forest-tree-card {
+  min-height: 227px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+.forest-tree-card:nth-child(even) {
+  margin-top: 28px;
+}
+.forest-tree-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.forest-tree-card .wood-label {
+  font-size: 19px;
+  min-height: 36px;
+  max-width: 100%;
+  margin: 0;
+  background: #ffe3b5;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: none;
+  transform: none;
+  padding: 7px 12px;
+  overflow-wrap: anywhere;
+}
+.forest-tree-art {
+  width: 100%;
+  height: 140px;
+  margin: 0;
+}
+.forest-tree-art .journal-art {
+  height: 100%;
+  width: 100%;
+  object-fit: contain;
+}
+.forest-progress-note {
+  padding: 5px 11px;
+  min-height: 48px;
+  width: 112px;
+  margin: 0;
+  font-size: 14px;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  transform: none;
+}
+.forest-progress-note strong {
+  text-align: center;
+  font-size: 14px;
+}
+.forest-progress-note small {
+  display: none;
+}
+.forest-progress-note .progress-track {
+  height: 7px;
+  margin-top: 6px;
+}
+.plant-new-tree {
+  width: 112px;
+  min-height: 65px;
+  align-self: center;
+  margin: 50px auto 0;
+  border: 1px solid var(--border);
+  background: #ffe3b5;
+  border-radius: 18px;
+  padding: 12px 8px;
+  transform: none;
+}
+.plant-new-tree strong {
+  font-size: 16px;
+}
+.plant-new-tree > span {
+  display: none;
+}
+.forest-footer {
+  margin-top: 14px;
+}
+.forest-footer > p {
+  font-size: 12px;
+}
+.room-banner {
+  background:
+    linear-gradient(var(--scene-overlay), var(--scene-overlay)),
+    url('/assets/figma21/forest-background.webp') top/100% auto;
+  min-height: 210px;
+}
+.detail-paper {
+  background: var(--cream);
+  border: 0;
+  border-radius: 20px 20px 0 0;
+}
+.tree-stage-gallery {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 10px 4px;
+}
+.tree-stage-gallery strong {
+  font-size: 13px;
+}
+.tree-stage-0 img,
+.tree-stage-1 img,
+.tree-stage-2 img {
+  scale: 1;
+}
+.maturity-0 {
+  transform: none;
+}
+.maturity-2 .fruit-base {
+  filter: none;
+}
+.fruit-blush {
+  display: none;
+}
+.goal-checklist-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.goal-checklist-card > div {
+  flex: 1;
+  min-width: 0;
+}
+.goal-checklist-card h2 {
+  font-size: 19px;
+}
+.goal-checklist-card p {
+  color: #807b72;
+  font-size: 14px;
+}
+.timeline-date {
+  font-size: 18px;
+  margin: 12px 0 15px;
+}
+.profile-card {
+  position: relative;
+  text-align: left;
+  padding: 24px 16px 20px 108px;
+  min-height: 130px;
+  border: 0;
+  background: url('/assets/figma21/forest-background.webp') top/100% auto;
+  border-radius: 18px;
+}
+.profile-card > .profile-avatar {
+  position: absolute;
+  left: 12px;
+  top: 22px;
+  width: 84px;
+  height: 84px;
+}
+.profile-card h2 {
+  font-size: 25px;
+}
+.profile-card p {
+  font-size: 14px;
+}
+.profile-project-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+}
+.profile-project-row > span {
+  flex: 1;
+}
+.profile-project-row small {
+  font-size: 13px;
+}
+.profile-project-row .progress-track {
+  max-width: 145px;
+  height: 7px;
+  margin-top: 7px;
+}
+.fig-report-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border: 0;
+  background: transparent;
+  gap: 12px;
+}
+.fig-report-stats > div {
+  border: 1px solid var(--border) !important;
+  border-radius: 18px;
+  background: var(--paper);
+  padding: 12px;
+}
+.fig-report-stats small {
+  font-size: 13px;
+  color: #807b72;
+}
+.share-actions {
+  display: flex;
+  gap: 12px;
+  margin: 20px 0;
+}
+.share-actions button {
+  flex: 1;
+}
+.task-plan-list {
+  margin-top: 20px;
+}
+.task-plan-list textarea {
+  margin-top: 8px;
+}
+.reminder-card .fig-setting-row > label {
+  flex: 1;
+}
+.garden-reminder {
+  display: block;
+  margin: 0 12px 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: #ecf4de;
+  font-size: 16px;
+}
+.record-scene {
+  background: var(--cream);
+  min-height: 215px;
+}
+.record-bubble {
+  font-size: 20px;
+  top: 65px;
+  width: 67%;
+  padding: 16px;
+}
+.record-mascot {
+  bottom: 0;
+  left: 2%;
+}
+.record-panel {
+  border: 1px solid var(--border);
+  background: var(--paper);
+  border-radius: 18px;
+  margin: 10px 14px 20px;
+  padding: 18px 14px;
+}
+.confirm-intro {
+  padding: 15px;
+  background: #ecf4de;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+}
+.draft-card {
+  background: var(--paper) !important;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+}
+.feedback-intro {
+  flex-direction: row-reverse;
+}
+.feedback-intro .speech-bubble {
+  background: var(--paper);
+}
+.feedback-project {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 13px;
+  margin-bottom: 13px;
+}
+.feedback-stats {
+  background: #ecf4de;
+}
+.harvest-page,
+.harvest-paper {
+  background: var(--cream);
+}
+.harvest-tree .project-tree img {
+  scale: 1;
+}
+@media (max-width: 359px) {
+  .forest-companion {
+    width: 133px;
+  }
+  .forest-heading > div > p:last-child {
+    max-width: 158px;
+    font-size: 13px;
+  }
+  .forest-heading h1 {
+    font-size: 30px;
+  }
+  .fig-metrics {
+    gap: 4px;
+  }
+  .fig-metrics small {
+    font-size: 11px;
+  }
+}
+.fig-quiz-choice {
+  display: flex;
+  text-align: left;
+  align-items: center;
+  gap: 15px;
+  width: 100%;
+  border: 1px solid var(--border);
+  padding: 15px;
+  border-radius: 18px;
+  background: var(--paper);
+  margin: 12px 0;
+}
+.fig-quiz-choice[aria-pressed='true'] {
+  background: #ecf4de;
+  border-color: #82a46b;
+}
+.fig-quiz-choice strong {
+  font-family: sans-serif;
+  font-size: 20px;
+}
+[data-motion='off'] *,
+[data-motion='off'] *::after {
+  animation: none !important;
+  transition: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::after {
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+.ai-candidate {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.ai-candidate-fields {
+  flex: 1;
+  min-width: 0;
+}
+.ai-candidate-fields label {
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+.ai-candidate-fields .checkbox-line {
+  font-size: 17px;
+}
+.ai-candidate-fields .checkbox-line input {
+  width: 20px;
+  height: 20px;
+}
+.ai-seed-reply {
+  padding: 15px;
+  margin: 15px 0;
+  font-size: 19px;
+}
+.share-illustration {
+  position: relative;
+}
+.share-decoration-sun {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+}
+.share-decoration-leaf {
+  position: absolute;
+  right: 16px;
+  top: 44px;
+}
+.share-theme-night {
+  background: #e5e9f4;
+}
+.share-theme-sea {
+  background: #e7f3ef;
+}
+.share-theme-sunset {
+  background: #fff0df;
+}
+.share-theme-choices {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 15px;
+}
+.share-theme-choices button {
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  padding: 3px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 14px;
+}
+.share-theme-choices button[aria-pressed='true'] {
+  border-color: var(--coral);
+}
+.fig-header {
+  background-image:
+    linear-gradient(var(--scene-overlay), var(--scene-overlay)),
+    url('/assets/figma21/forest-background.webp');
+}
+.voice-button {
+  touch-action: none;
+  user-select: none;
+}
+.detail-back {
+  display: inline-flex;
+  padding: 13px 0 0;
+}
+.room-banner {
+  height: 218px;
+  padding: 0 18px;
+}
+.detail-name {
+  margin-top: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.detail-name > div {
+  flex: 1;
+  min-width: 0;
+}
+.detail-name h1 {
+  font-size: 28px;
+  overflow-wrap: anywhere;
+}
+.detail-name p {
+  font-size: 14px;
+  line-height: 1.5;
+}
+.detail-hero-tree {
+  display: inline-block;
+  width: 155px;
+  flex-shrink: 0;
+}
+.detail-edit {
+  display: inline-block;
+  margin-top: 10px;
+  min-height: 28px;
+  padding: 4px 17px;
+  font-size: 15px;
+}
+.forest-heading h1 {
+  margin-left: 39px;
+}
+.forest-heading > div > p:last-child {
+  padding-left: 21px;
+}
+.forest-grid {
+  margin-top: 29px;
+  padding-left: 8px;
+}
+.forest-tree-card:nth-child(even) .forest-tree-art {
+  width: 185px;
+  max-width: none;
+  height: 160px;
+}
+.forest-tree-card:nth-child(n + 3):nth-child(odd) {
+  transform: translateY(-20px);
+}
+.record-growth-preview {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 140px;
+  gap: 4px;
+}
+.record-growth-preview p {
+  color: #807b72;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.record-growth-preview > img:last-child {
+  align-self: flex-end;
+}
+.feedback-hero {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.feedback-hero > div {
+  flex: 1;
+  min-width: 0;
+}
+.feedback-hero h2 {
+  font-size: 24px;
+}
+.feedback-action-count {
+  font-size: 32px;
+  color: #85af67;
+}
+.feedback-hero p {
+  font-size: 15px;
+  color: #807b72;
+  line-height: 1.6;
+}
+.ripe-fruit-transition {
+  position: relative;
+  width: 95px;
+  height: 95px;
+  margin: 10px auto;
+}
+.ripe-fruit-transition > div {
+  position: absolute;
+  inset: 0;
+}
+.ai-classification > h2 {
+  font-size: 21px;
+}
+@media (max-width: 359px) {
+  .detail-hero-tree {
+    width: 125px;
+  }
+  .record-growth-preview > img:first-child {
+    width: 100px;
+    height: 100px;
+  }
+  .record-growth-preview > img:last-child {
+    width: 80px;
+    height: 80px;
+  }
+  .forest-heading h1 {
+    margin-left: 22px;
+  }
+}
+.maturity-0 {
+  transform: scale(0.62);
+}
+.just-harvested .harvest-target {
+  animation: none;
+  visibility: hidden;
+}
+.just-harvested .harvest-companion {
+  animation: none;
+}
+.inactive-dialog {
+  position: fixed;
+  inset: 0;
+  width: min(344px, calc(100vw - 36px));
+  max-height: calc(100dvh - 60px);
+  margin: auto;
+  text-align: center;
+  padding: 24px 20px 20px;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 12px 50px #4a2c1e33;
+  overflow: auto;
+}
+.inactive-dialog::backdrop {
+  background: #4a2c1e70;
+}
+.inactive-dialog h2 {
+  font-size: 26px;
+  margin: 12px 0;
+}
+.inactive-dialog p {
+  line-height: 1.8;
+  font-size: 18px;
+  margin: 0 0 18px;
+}
+.inactive-dialog .outline-button {
+  margin-top: 12px;
+}
+.page-heading {
+  min-height: 48px;
+  padding: 10px 0;
+}
+.fig-header {
+  min-height: 190px;
+}
+.fig-header .page-heading {
+  min-height: 48px;
+}
+.fig-paper {
+  padding-top: 8px;
+}
+.task-planner-page .fig-header .speech-bubble {
+  padding: 12px;
+}
+.task-planner-page .speech-bubble textarea {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  min-height: 74px;
+  height: 74px;
+  padding: 0;
+  margin: 0;
+}
+.task-planner-page .speech-bubble .small-print {
+  text-align: right;
+  margin: 3px 0 0;
+  font-size: 13px;
+}
+.planner-toolbar {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  align-items: start;
+  gap: 10px;
+}
+.planner-toolbar .voice-button {
+  font-size: 14px;
+  padding: 9px 8px;
+}
+.planner-toolbar > .coral-button {
+  margin: 0;
+  min-height: 48px;
+  font-size: 17px;
+  padding: 8px;
+}
+.forest-heading > div > p:last-child {
+  font-size: 13px;
+  max-width: 219px;
+}
+@media (max-width: 359px) {
+  .forest-heading > div > p:last-child {
+    max-width: 181px;
+    font-size: 11px;
+    padding-left: 10px;
+  }
+}

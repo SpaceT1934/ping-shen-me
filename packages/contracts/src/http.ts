@@ -2,13 +2,13 @@ import { z } from 'zod';
 import { colorSchema, spriteSchema, legacySchema } from './garden.js';
 const id = z.string().min(1).max(100);
 export const timestampSchema = z.iso.datetime({ offset: true });
-const name = z.string().trim().min(1).max(100);
+const name = z.string().trim().min(1).max(200);
 const content = z.string().trim().min(1).max(2000);
 export const rangeSchema = z.enum(['7d', '30d', 'month', 'all']);
 export const growthDtoSchema = z.object({
   action_count: z.number().int().nonnegative(),
   harvest_count: z.number().int().nonnegative().default(0),
-  tree_stage_threshold: z.union([z.literal(1), z.literal(2)]).default(2),
+  tree_stage_threshold: z.union([z.literal(1), z.literal(2), z.literal(3)]).default(3),
   stage: z.number().int().nonnegative(),
   stage_key: z.string(),
 });
@@ -27,7 +27,8 @@ export const goalDtoSchema = z.object({
 export const projectDtoSchema = z.object({
   id,
   name: z.string(),
-  status: z.enum(['active', 'completed', 'archived']),
+  category: z.string().max(20).optional(),
+  status: z.enum(['active', 'completed', 'paused', 'archived']),
   goal: goalDtoSchema.nullable(),
   goals: z.array(goalDtoSchema).optional(),
   growth: growthDtoSchema,
@@ -188,6 +189,7 @@ export const projectBatchSchema = z
           .object({
             client_item_id: id,
             name,
+            category: z.string().trim().min(1).max(20).optional(),
             icon: spriteSchema.default('green'),
             color: colorSchema.default('sage'),
             goal: goalCreateSchema.nullable().optional(),
@@ -205,11 +207,12 @@ export const projectBatchSchema = z
 export const projectPatchSchema = z
   .object({
     name: name.optional(),
-    status: z.enum(['active', 'completed', 'archived']).optional(),
+    category: z.string().trim().min(1).max(20).optional(),
+    status: z.enum(['active', 'completed', 'paused', 'archived']).optional(),
     icon: spriteSchema.optional(),
     color: colorSchema.optional(),
     current_goal_id: id.optional(),
-    tree_stage_threshold: z.union([z.literal(1), z.literal(2)]).optional(),
+    tree_stage_threshold: z.union([z.literal(1), z.literal(2), z.literal(3)]).optional(),
   })
   .strict()
   .refine((value) => Object.keys(value).length > 0, '请提供需要修改的字段');

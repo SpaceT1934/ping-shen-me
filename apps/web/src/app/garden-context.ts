@@ -9,17 +9,26 @@ type Context = GardenView & {
   hasStarted: boolean;
   busy: boolean;
   startGarden: () => Promise<boolean>;
-  addProject: (name: string, goal: GoalInput | null, icon?: SpriteName) => Promise<string | null>;
+  addProject: (
+    name: string,
+    goal: GoalInput | null,
+    icon?: SpriteName,
+    category?: string,
+  ) => Promise<string | null>;
   addProjects: (
     projects: Extract<Command, { type: 'project.batch' }>['projects'],
-  ) => Promise<boolean>;
+  ) => Promise<string[] | null>;
   editProject: (
     id: string,
     name: string,
     icon: SpriteName,
     color: 'sage' | 'blue' | 'gold' | 'peach',
+    category?: string,
   ) => Promise<boolean>;
-  setProjectStatus: (id: string, status: 'active' | 'completed' | 'archived') => Promise<boolean>;
+  setProjectStatus: (
+    id: string,
+    status: 'active' | 'completed' | 'paused' | 'archived',
+  ) => Promise<boolean>;
   toggleTask: (id: string) => Promise<Feedback | null>;
   addTask: (projectId: string, title: string, dueDate: string | null) => Promise<boolean>;
   editTask: (id: string, title: string, dueDate: string | null) => Promise<boolean>;
@@ -37,7 +46,7 @@ type Context = GardenView & {
   updateProgress: (goalId: string, value: number) => Promise<Feedback | null>;
   createGoal: (projectId: string, goal: GoalInput, replace: boolean) => Promise<Feedback | null>;
   setPrimaryGoal: (projectId: string, goalId: string) => Promise<boolean>;
-  setTreeThreshold: (projectId: string, threshold: 1 | 2) => Promise<boolean>;
+  setTreeThreshold: (projectId: string, threshold: 1 | 2 | 3) => Promise<boolean>;
   harvestResult: (id: string, followUp: 'continue' | 'complete' | 'next_goal') => Promise<boolean>;
 };
 export const GardenContext = createContext<Context | null>(null);

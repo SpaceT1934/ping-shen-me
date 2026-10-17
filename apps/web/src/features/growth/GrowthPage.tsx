@@ -8,17 +8,22 @@ import { PageHeading } from '../../components/PageHeading';
 import { LineIcon, Illustration } from '../../components/Illustration';
 import { LivingMascot } from '../../components/AmbientScene';
 import { GoalFruit, ProjectTree, FruitBasket } from '../../components/GardenVisuals';
+import { usePreferences } from '../../lib/preferences';
+import { prepareHarvestSound } from '../../lib/harvest-sound';
+import { FigmaMotion } from '../../design/FigmaMotion';
 export function GrowthPage() {
+  const prefs = usePreferences();
   const { projects, state, entries, results } = useGarden();
   const location = useLocation();
-  const feedback = (location.state as { feedback?: Feedback } | null)?.feedback;
+  const context = location.state as { feedback?: Feedback; actionCount?: number } | null;
+  const feedback = context?.feedback;
   const todayActions = entries.filter(
     (item) => item.type === 'action' && item.date === dateInZone(new Date()),
   );
   const wateredIds = feedback?.growthProjectIds ?? todayActions.map((item) => item.projectId);
   const grown = projects.filter((item) => wateredIds.includes(item.id));
   const fruitId = feedback?.resultIds[0];
-  const encouragement = useActionFeedback(state.version, grown.length > 0);
+  const encouragement = useActionFeedback(state.version, prefs.recommendations && grown.length > 0);
   return (
     <div className="paper-page feedback-page">
       <PageHeading title="今天的小进步" back="/" />
@@ -29,6 +34,29 @@ export function GrowthPage() {
           <p>{encouragement.data?.text || '今天的努力已经好好记下，继续按自己的节奏慢慢来～'}</p>
         </div>
       </div>
+      {grown[0] && (
+        <section className="feedback-hero fig-card">
+          <Illustration
+            name={
+              ['tree-seedling', 'tree-large-green', 'tree-large-full', 'tree-large-red'][
+                grown[0].growth.stageIndex
+              ]!
+            }
+            size={145}
+          />
+          <div>
+            <h2>{grown[0].name}</h2>
+            <FigmaMotion node="31:3058" className="feedback-action-count">
+              {context?.actionCount ? `+${context.actionCount}` : '已浇水'}
+            </FigmaMotion>
+            <p>
+              每一次认真行动，
+              <br />
+              都会让小树更有力量。
+            </p>
+          </div>
+        </section>
+      )}
       <div className="feedback-stats">
         <div>
           <strong>{todayActions.length}</strong>
@@ -74,6 +102,16 @@ export function GrowthPage() {
           有果实成熟了，等你亲手摘下～
         </Link>
       )}
+      {fruitId && (
+        <div className="ripe-fruit-transition" aria-label="目标已经达成，果实成熟">
+          <FigmaMotion node="31:3094">
+            <Illustration name="fruit-transition-orange" size={75} />
+          </FigmaMotion>
+          <FigmaMotion node="31:3095">
+            <Illustration name="fruit-transition-red" size={75} />
+          </FigmaMotion>
+        </div>
+      )}
       <Link
         to={fruitId ? `/fruit?result=${fruitId}` : '/'}
         className="coral-button full-width feedback-return"
@@ -85,6 +123,7 @@ export function GrowthPage() {
   );
 }
 export function FruitPage() {
+  const prefs = usePreferences();
   const [params] = useSearchParams();
   const { projects, results, harvestResult, busy } = useGarden();
   const [caught, setCaught] = useState(false);
@@ -196,7 +235,10 @@ export function FruitPage() {
               className="coral-button full-width"
               disabled={busy}
               onClick={async () => {
-                if (await harvestResult(result.id, followUp)) setCaught(true);
+                const sound = prepareHarvestSound(prefs.sound);
+                const saved = await harvestResult(result.id, followUp);
+                sound(saved);
+                if (saved) setCaught(true);
               }}
             >
               {busy ? '正在收获…' : '摘下这颗果实'}
@@ -206,6 +248,11 @@ export function FruitPage() {
         ) : (
           <Link to="/" className="coral-button full-width">
             回到我的树林
+          </Link>
+        )}
+        {result?.harvestedAt && (
+          <Link className="outline-button full-width" to={`/share?result=${result.id}`}>
+            做成日签 →
           </Link>
         )}
         <p className="harvest-footnote">一边做很多事，一边慢慢长大。</p>

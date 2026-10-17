@@ -17,6 +17,8 @@ export function activityBuckets(records: Entry[], startAt: string | null, endAt:
     const from = start + Math.floor((index * days) / count) * 86400000;
     const to = Math.min(end, start + Math.floor(((index + 1) * days) / count) * 86400000);
     return {
+      from,
+      to,
       label: new Date(from).toLocaleDateString('zh-CN', {
         timeZone: 'Asia/Shanghai',
         month: 'numeric',

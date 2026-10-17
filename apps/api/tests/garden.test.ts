@@ -50,6 +50,36 @@ const item = (projectId: string | null, type = 'action', clientId = 'i1') => ({
   source_text: '今天做了一件事',
 });
 describe('文档 V0.2 REST 联调', () => {
+  it('新版分类与暂缓状态保存在服务端，暂缓时不能记入行动，恢复后可继续', async () => {
+    const cookie = await session();
+    const response = await write(cookie, '/projects/batch', {
+      projects: [{ client_item_id: 'new-category', name: '新'.repeat(120), category: '个人创作' }],
+    });
+    expect(response.statusCode).toBe(200);
+    const project = response.json().data.projects[0];
+    expect(project.category).toBe('个人创作');
+    expect(
+      (
+        await write(
+          cookie,
+          `/projects/${project.id}`,
+          { status: 'paused', category: '兴趣爱好' },
+          'PATCH',
+        )
+      ).statusCode,
+    ).toBe(200);
+    const paused = (await read(cookie, `/projects/${project.id}`)).json().data.project;
+    expect(paused).toMatchObject({ status: 'paused', category: '兴趣爱好' });
+    expect((await read(cookie, '/projects?status=paused')).json().data.items).toHaveLength(1);
+    expect(
+      (await write(cookie, '/record-batches/commit', { items: [item(project.id)] })).statusCode,
+    ).toBe(422);
+    expect((await read(cookie, '/records')).json().data.items).toHaveLength(0);
+    await write(cookie, `/projects/${project.id}`, { status: 'active' }, 'PATCH');
+    expect(
+      (await write(cookie, '/record-batches/commit', { items: [item(project.id)] })).statusCode,
+    ).toBe(200);
+  });
   it('统一响应与会话、bootstrap；旧命令接口不再公开', async () => {
     expect((await app.inject({ url: '/api/v1/bootstrap' })).statusCode).toBe(401);
     const cookie = await session();
@@ -80,7 +110,7 @@ describe('文档 V0.2 REST 联调', () => {
     expect(detail.growth).toEqual({
       action_count: 0,
       harvest_count: 0,
-      tree_stage_threshold: 2,
+      tree_stage_threshold: 3,
       stage: 0,
       stage_key: 'stage_0',
     });

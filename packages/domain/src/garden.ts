@@ -172,6 +172,7 @@ export function applyCommand(
   const command = envelope.command;
   const createProject = (input: {
     name: string;
+    category?: string;
     icon: GardenState['projects'][number]['icon'];
     color: GardenState['projects'][number]['color'];
     goal: GoalInput | null;
@@ -182,6 +183,7 @@ export function applyCommand(
     state.projects.push({
       id: projectId,
       name: input.name,
+      category: input.category,
       icon: input.icon,
       color: input.color,
       status: 'active',
@@ -209,6 +211,7 @@ export function applyCommand(
         name: command.name,
         icon: command.icon,
         color: command.color,
+        ...(command.category !== undefined ? { category: command.category } : {}),
       });
       break;
     }

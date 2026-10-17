@@ -54,6 +54,7 @@ function hydrate(
     projects: projects.map((item) => ({
       id: item.id,
       name: item.name,
+      category: item.category,
       status: item.status,
       icon: item.icon,
       color: item.color,
@@ -173,6 +174,7 @@ async function mutate(envelope: CommandEnvelope) {
             {
               client_item_id: operationId,
               name: command.name,
+              category: command.category,
               icon: command.icon,
               color: command.color,
               goal: command.goal ? goalBody(command.goal) : null,
@@ -191,6 +193,7 @@ async function mutate(envelope: CommandEnvelope) {
           projects: command.projects.map((project, index) => ({
             client_item_id: `${operationId}:${index}`,
             name: project.name,
+            category: project.category,
             icon: project.icon,
             color: project.color,
             goal: project.goal ? goalBody(project.goal) : null,
@@ -204,7 +207,12 @@ async function mutate(envelope: CommandEnvelope) {
       await write(
         `/projects/${command.id}`,
         'PATCH',
-        { name: command.name, icon: command.icon, color: command.color },
+        {
+          name: command.name,
+          icon: command.icon,
+          color: command.color,
+          category: command.category,
+        },
         z.object({}),
       );
       break;

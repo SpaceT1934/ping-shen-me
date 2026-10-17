@@ -6,7 +6,11 @@ import { ArtIcon, Illustration } from '../../components/Illustration';
 import { PageHeading } from '../../components/PageHeading';
 import { activityBuckets } from '../../lib/garden/activity-chart';
 import { AIReportSummary } from './AIReportSummary';
+import { Link } from 'react-router-dom';
+import { periodMetrics, periodChange } from '../../lib/garden/report-metrics';
+import { usePreferences } from '../../lib/preferences';
 export function ReportsPage() {
+  const prefs = usePreferences();
   const [period, setPeriod] = useState<'7天' | '30天' | '本月' | '全部'>('7天');
   const { state, projects } = useGarden();
   const query = useQuery({
@@ -30,16 +34,33 @@ export function ReportsPage() {
     );
   const buckets = activityBuckets(state.records, report.start_at, report.end_at);
   const peak = Math.max(1, ...buckets.map((item) => item.count));
-  const trend = buckets.map((_, index) => ({
+  const metrics = periodMetrics(state, report.start_at, report.end_at);
+  const previous = report.start_at
+    ? periodMetrics(
+        state,
+        new Date(2 * Date.parse(report.start_at) - Date.parse(report.end_at)).toISOString(),
+        report.start_at,
+      )
+    : null;
+  const trend = buckets.map((bucket, index) => ({
     x: 15 + (index * 250) / Math.max(1, buckets.length - 1),
-    count: buckets.slice(0, index + 1).reduce((sum, bucket) => sum + bucket.count, 0),
+    count: state.results.filter(
+      (result) =>
+        result.harvestedAt &&
+        Date.parse(result.harvestedAt) >= bucket.from &&
+        Date.parse(result.harvestedAt) < bucket.to,
+    ).length,
   }));
-  const total = Math.max(1, trend.at(-1)?.count ?? 0);
+  const total = Math.max(1, ...trend.map((item) => item.count));
   return (
     <div className="paper-page reports-page">
-      <PageHeading title="我的成长报告" />
+      <PageHeading title="生长报告" />
+      <div className="fig-links">
+        <Link to="/timeline">成长时间线 →</Link>
+        <Link to="/collection">果实收藏 →</Link>
+      </div>
       <div className="segment-tabs report-periods" role="tablist" aria-label="报告时间范围">
-        {(['7天', '30天', '本月', '全部'] as const).map((label) => (
+        {(['7天', '30天'] as const).map((label) => (
           <button
             key={label}
             role="tab"
@@ -47,7 +68,7 @@ export function ReportsPage() {
             className={period === label ? 'selected' : ''}
             onClick={() => setPeriod(label)}
           >
-            {label}
+            {label === '7天' ? '周报' : '月报'}
           </button>
         ))}
       </div>
@@ -71,32 +92,19 @@ export function ReportsPage() {
         </p>
         <ArtIcon name="mascot" size={76} />
       </section>
-      <div className="report-stats">
+      <div className="report-stats fig-report-stats">
         {/* 数字始终来自业务统计，AI 仅生成回顾文字。 */}
-        <div>
-          <ArtIcon name="apple" size={35} />
-          <span>行动次数</span>
-          <strong>
-            {report.action_count}
-            <small> 次</small>
-          </strong>
-        </div>
-        <div>
-          <ArtIcon name="green" size={35} />
-          <span>活跃方向</span>
-          <strong>
-            {report.active_project_count}
-            <small> 个</small>
-          </strong>
-        </div>
-        <div>
-          <ArtIcon name="golden" size={35} />
-          <span>新成果</span>
-          <strong>
-            {report.new_result_count}
-            <small> 个</small>
-          </strong>
-        </div>
+        {metrics.map((value, index) => (
+          <div key={index}>
+            <Illustration
+              name={['sprout', 'apple-stat', 'tree-green', 'crown'][index]!}
+              size={32}
+            />
+            <span>{['行动次数', '成熟果实', '推进项目', '完成目标'][index]}</span>
+            <strong>{value}</strong>
+            <small>{previous ? periodChange(value, previous[index]!) : '累计'}</small>
+          </div>
+        ))}
       </div>
       <section className="journal-chart">
         <h2>
@@ -117,12 +125,12 @@ export function ReportsPage() {
       <section className="journal-chart trend-chart">
         <h2>
           <Illustration name="fruit-red" size={22} />
-          行动积累
+          果实收获趋势
         </h2>
         <svg
           viewBox="0 0 280 95"
           role="img"
-          aria-label={`本周期累计 ${trend.at(-1)?.count ?? 0} 次行动`}
+          aria-label={`本周期收获 ${trend.reduce((sum, item) => sum + item.count, 0)} 颗果实`}
         >
           <path d="M15 82H265" stroke="#d9ccb5" fill="none" />
           <path
@@ -152,12 +160,14 @@ export function ReportsPage() {
         </svg>
       </section>
       <section className="report-projects">
-        <AIReportSummary
-          key={`${period}:${state.version}`}
-          period={period}
-          version={state.version}
-          hasData={Boolean(report.action_count || report.new_result_count)}
-        />
+        {prefs.recommendations && (
+          <AIReportSummary
+            key={`${period}:${state.version}`}
+            period={period}
+            version={state.version}
+            hasData={Boolean(report.action_count || report.new_result_count)}
+          />
+        )}
         <h2>各项目进展</h2>
         <p className="small-print">
           进度条显示当前目标进度；行动次数按所选周期统计，历史项目仍保留。
@@ -171,7 +181,11 @@ export function ReportsPage() {
                 {project.name}
                 {project.status !== 'active' && (
                   <small className="history-status">
-                    {project.status === 'archived' ? '归档' : '结束'}
+                    {project.status === 'archived'
+                      ? '归档'
+                      : project.status === 'paused'
+                        ? '暂缓'
+                        : '完成'}
                   </small>
                 )}
               </span>

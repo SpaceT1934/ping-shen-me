@@ -1,6 +1,6 @@
 # 工程架构
 
-本工程将网页展示、HTTP 接口、业务规则和持久化分开。前端不能直接访问数据库，状态变更经过后端校验和事务。对外接口以[接口约定 V0.3](苹什么_前后端接口约定_V0.3.md)为准。
+本工程将网页展示、HTTP 接口、业务规则和持久化分开。前端不能直接访问数据库，状态变更经过后端校验和事务。对外接口以[接口约定 V0.4](苹什么_前后端接口约定_V0.4.md)为准。
 
 ## 数据流
 
@@ -52,4 +52,14 @@ garden_entity_links 是不可重复的身份绑定索引，以用户、绑定类
 
 `styles/journal.css` 管理水彩手帐主题、树林和收获场景；`Illustration.tsx` 统一引用参考素材和操作图标；`GardenVisuals.tsx` 集中渲染四阶段树、五档目标苹果和果篮；GoalCard 负责多目标与主要目标选择，ResultsList 区分树上待摘与已收获。HomePage 只组合项目森林，不实现业务计数规则。
 
-本次不改变数据库事实存储方式，使用兼容的可选 `Project.treeStageThreshold` 和已有 Record.goalId/contribution、Result.harvestedAt。旧快照没有阈值时默认 2，不清空、不自动补录收获。API project 保留旧 `goal` 字段并新增完整 `goals`，record 新增关联与贡献，便于旧客户端兼容读取。
+本次不改变数据库事实存储方式，使用兼容的可选 `Project.treeStageThreshold` 和已有 Record.goalId/contribution、Result.harvestedAt。旧快照没有阈值时默认 3（已有显式 1/2 配置保持），不清空、不自动补录收获。API project 保留旧 `goal` 字段并新增完整 `goals`，record 新增关联与贡献，便于旧客户端兼容读取。
+
+## Figma 21 页面与动效
+
+`features` 按种树、项目、目标、记录、报告、时间线、收藏、分享和设置分目录。`design/components.tsx` 提供场景标题、筛选、指标和开关；业务状态仍只通过 GardenProvider 和 REST API 修改。
+
+`design/welcome-motion.ts` 保留 Figma MCP 返回的欢迎页动画片段；`motion-data.json` 保存本地 .fig 的逐节点轨道，`motion-profiles.ts` 解析时间、插值与弹簧，`use-design-motion.ts` 将原节点绑定到实际数据界面。重复列表复用同组轨道，进度动画归一化到真实进度；输入获得焦点、页面隐藏时暂停，系统减少动态效果或用户关闭动效时停止。
+
+`public/assets/figma21` 保存新文件的可见素材和矢量图标。导出时忽略已经被隐藏的旧图层，优先使用可见 @4x 新素材；移动端 WebP 保持原比例并压缩。原始哈希、节点与尺寸记入 manifest；重建脚本在 `apps/web/scripts/import-figma21.py` 和 `export-figma-motion.py`。字体沿用完整手写字体分片。
+
+浏览器偏好与业务事实分开：`lib/preferences.ts` 管理本机设置，项目分类单独随 Project 持久化，`features/settings/use-garden-preferences.ts` 应用主题和前台提醒。日签图片由前端根据真实成果和任务生成。AI 拆任务经过 Node 会话与项目归属校验，再调用 Python 结构化模型；用户确认之前不写入数据库。

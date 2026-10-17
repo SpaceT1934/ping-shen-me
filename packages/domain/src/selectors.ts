@@ -1,10 +1,10 @@
 import type { GardenState, Goal } from '@apple/contracts';
 // Stage is derived from manually harvested, unique goals; actions only receive watering feedback.
 export const growthStages = [
-  { threshold: 0, name: '小树苗', size: 48 },
-  { threshold: 2, name: '幼树', size: 62 },
-  { threshold: 4, name: '茂盛树', size: 77 },
-  { threshold: 6, name: '成熟树', size: 90 },
+  { threshold: 0, name: '树苗期', size: 48 },
+  { threshold: 3, name: '成长中', size: 62 },
+  { threshold: 6, name: '茁壮成长', size: 77 },
+  { threshold: 9, name: '硕果累累', size: 90 },
 ] as const;
 export function growthFor(state: GardenState, projectId: string) {
   const count = state.records.filter(
@@ -15,7 +15,7 @@ export function growthFor(state: GardenState, projectId: string) {
       .filter((item) => item.projectId === projectId && item.harvestedAt)
       .map((item) => item.goalId),
   ).size;
-  const threshold = state.projects.find((item) => item.id === projectId)?.treeStageThreshold ?? 2;
+  const threshold = state.projects.find((item) => item.id === projectId)?.treeStageThreshold ?? 3;
   const stageIndex = Math.min(3, Math.floor(harvestCount / threshold));
   return { ...growthStages[stageIndex]!, count, harvestCount, threshold, stageIndex };
 }

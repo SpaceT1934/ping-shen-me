@@ -46,6 +46,7 @@ class ProjectItem(Input):
     name: Annotated[str, Field(min_length=1, max_length=80)]
     goal_text: Annotated[str, Field(min_length=1, max_length=200)] | None
     source_text: Annotated[str, Field(min_length=1, max_length=300)]
+    category: Literal["工作事业", "学习成长", "健康运动", "生活习惯", "兴趣爱好", "其他"] = "其他"
 
 
 class ReportProject(Input):
@@ -70,3 +71,13 @@ class AudioRequest(Input):
 
 class FeedbackRequest(Input):
     actions: Annotated[list[Text], Field(max_length=3)]
+
+
+class TaskPlanRequest(Input):
+    text: Annotated[str, Field(min_length=1, max_length=200)]
+    project_name: Annotated[str, Field(min_length=1, max_length=200)]
+
+
+class TaskPlanItem(Input):
+    title: Annotated[str, Field(min_length=1, max_length=80)]
+    description: Annotated[str, Field(min_length=1, max_length=110)]

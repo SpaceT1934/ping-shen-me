@@ -3,4 +3,5 @@ dist
 coverage
 pnpm-lock.yaml
 apps/api/drizzle
-
+# Imported Figma artwork: preserve the original SVG asset bytes.
+apps/web/public/assets/figma21

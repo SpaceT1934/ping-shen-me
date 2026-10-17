@@ -23,8 +23,9 @@ cp apps/ai/requirements.txt apps/ai/.env.example "$work_dir/release/apps/ai/"
 cp infra/deploy/receive-release.sh infra/deploy/prepare-ai-runtime.sh infra/deploy/start-ai.sh infra/deploy/setup-ai.sh infra/deploy/configure-ai-server.py "$work_dir/release/infra/deploy/"
 printf '%s\n' "$3" > "$work_dir/release/.dependency-hash"
 
-# Source PNGs stay in Git for editing; current pages use the WebP versions.
-if grep -qE '\.png' "$work_dir/release/apps/web/dist/index.html" "$work_dir/release/apps/web/dist/assets/"*.css "$work_dir/release/apps/web/dist/assets/"*.js; then
+# Only runtime asset URLs are checked. A generated share-card download may be named .png.
+png_asset_pattern="/assets/[^\"'[:space:]<>)]*\\.png"
+if grep -qE "$png_asset_pattern" "$work_dir/release/apps/web/dist/index.html" "$work_dir/release/apps/web/dist/assets/"*.css "$work_dir/release/apps/web/dist/assets/"*.js; then
   echo 'Built pages still reference PNG assets; update the package list first' >&2
   exit 1
 fi

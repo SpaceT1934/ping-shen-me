@@ -5,9 +5,17 @@ import {
   reportSummarySchema,
   transcriptionSchema,
   actionFeedbackSchema,
+  taskPlanSchema,
 } from '@apple/contracts';
 import { apiRequest } from './api';
 export const aiApi = {
+  plan: (projectId: string, text: string) =>
+    apiRequest(
+      '/ai/tasks/plan',
+      taskPlanSchema,
+      { method: 'POST', body: JSON.stringify({ project_id: projectId, text }) },
+      40_000,
+    ),
   capabilities: async () => {
     const data = await apiRequest('/ai/capabilities', aiCapabilitiesSchema);
     return { aiConfigured: data.ai_configured, asrEnabled: data.asr_enabled };
@@ -24,6 +32,7 @@ export const aiApi = {
         name: item.name,
         goalText: item.goal_text,
         sourceText: item.source_text,
+        category: item.category,
       })),
     };
   },

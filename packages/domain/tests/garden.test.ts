@@ -207,7 +207,7 @@ describe('PRD V1.1 目标、果实与树独立成长', () => {
     const other = state.projects[1]!.id;
     expect(growthFor(state, projectId).stageIndex).toBe(0);
     expect(state.results).toHaveLength(0);
-    for (let index = 0; index < 8; index++) {
+    for (let index = 0; index < 10; index++) {
       let id = goalId;
       if (index > 0) {
         state = run(state, {
@@ -224,14 +224,16 @@ describe('PRD V1.1 目标、果实与树独立成长', () => {
       state = run(state, { type: 'result.harvest', id: result.id, followUp: 'continue' }).state;
       state = run(state, { type: 'result.harvest', id: result.id, followUp: 'continue' }).state;
       expect(growthFor(state, projectId).harvestCount).toBe(index + 1);
-      expect(growthFor(state, projectId).stageIndex).toBe(Math.min(3, Math.floor((index + 1) / 2)));
+      expect(growthFor(state, projectId).stageIndex).toBe(Math.min(3, Math.floor((index + 1) / 3)));
       expect(growthFor(state, other).stageIndex).toBe(0);
     }
+    state = run(state, { type: 'project.threshold', id: projectId, threshold: 2 }).state;
+    expect(growthFor(state, projectId).threshold).toBe(2);
     const restored = JSON.parse(JSON.stringify(state)) as GardenState;
     expect(growthFor(restored, projectId)).toEqual(growthFor(state, projectId));
     state = run(state, { type: 'project.threshold', id: projectId, threshold: 1 }).state;
     expect(growthFor(state, projectId).threshold).toBe(1);
-    expect(growthFor(state, other).threshold).toBe(2);
+    expect(growthFor(state, other).threshold).toBe(3);
   });
   it('选择具体目标，关联行动可零贡献，目标切换不串进度，超过目标上限会截断', () => {
     const { state: initial, projectId, goalId } = setup();

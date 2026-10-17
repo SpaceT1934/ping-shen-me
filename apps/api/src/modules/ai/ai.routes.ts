@@ -11,6 +11,9 @@ import {
   transcriptionInputSchema,
   transcriptionSchema,
   actionFeedbackSchema,
+  taskPlanInputSchema,
+  taskPlanSchema,
+  projectCategorySchema,
 } from '@apple/contracts';
 import { DomainError } from '@apple/domain';
 import type { GardenRepository } from '../../repositories/garden.repository.js';
@@ -40,6 +43,7 @@ const pythonProjects = z.object({
         name: z.string(),
         goal_text: z.string().nullable(),
         source_text: z.string(),
+        category: projectCategorySchema.default('其他'),
       }),
     )
     .max(20),
@@ -153,6 +157,17 @@ export const registerAiRoutes: FastifyPluginAsync<{
     if (!parsed.success)
       throw new DomainError('AI_PARSE_FAILED', '记录草稿校验失败，请手动整理', 503);
     return parsed.data;
+  });
+  app.post('/ai/tasks/plan', async (request) => {
+    const user = await sessions.require(request);
+    const body = taskPlanInputSchema.parse(request.body);
+    const state = await repository.read(user);
+    const project = state.projects.find(
+      (item) => item.id === body.project_id && item.status === 'active',
+    );
+    if (!project) throw new DomainError('NOT_FOUND', '请先选择一个进行中的项目', 404);
+    limit(user);
+    return call('/tasks/plan', taskPlanSchema, { text: body.text, project_name: project.name });
   });
   app.post('/ai/reports/summarize', async (request) => {
     const user = await sessions.require(request);

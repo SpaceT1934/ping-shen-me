@@ -49,7 +49,7 @@ summary:focus-visible {
 .app-shell {
   background:
     linear-gradient(#fffaf1ed, #fffaf1ed),
-    url('/assets/journal/forest-background.webp') center/cover;
+    url('/assets/figma21/forest-background.webp') center/cover;
   padding-bottom: 98px;
 }
 .app-shell main {
@@ -426,7 +426,7 @@ input[type='radio'] {
 }
 /* Welcome scene: use the extracted sky, wildflowers and original apple character. */
 .journal-welcome {
-  background: #f8edd8 url('/assets/journal/welcome-background.webp') center center/cover no-repeat;
+  background: #f8edd8 url('/assets/figma21/welcome-background.webp') center center/cover no-repeat;
   min-height: max(100dvh, 760px);
   position: relative;
   overflow: hidden;
@@ -561,7 +561,7 @@ input[type='radio'] {
   isolation: isolate;
   min-height: calc(100dvh - 98px);
   padding: 20px 15px 24px;
-  background: #d3e9a5 url('/assets/journal/forest-background.webp') center top/100% 1100px no-repeat;
+  background: #d3e9a5 url('/assets/figma21/forest-background.webp') center top/100% 1100px no-repeat;
 }
 .forest-heading {
   display: flex;
@@ -827,7 +827,7 @@ input[type='radio'] {
 .seed-scene {
   background:
     linear-gradient(#fffcf2df, #fffcf29e),
-    url('/assets/journal/forest-background.webp') center 12%/100% auto no-repeat;
+    url('/assets/figma21/forest-background.webp') center 12%/100% auto no-repeat;
   height: 260px;
 }
 .seed-scene .page-heading {
@@ -880,7 +880,7 @@ input[type='radio'] {
   height: 248px;
   background:
     linear-gradient(#fffcf2e8, #fffcf2bd),
-    url('/assets/journal/forest-background.webp') center 13%/100% auto no-repeat;
+    url('/assets/figma21/forest-background.webp') center 13%/100% auto no-repeat;
 }
 .record-bubble {
   top: 80px;
@@ -985,7 +985,7 @@ input[type='radio'] {
 }
 .room-banner {
   height: 245px;
-  background: #f6f2dc url('/assets/journal/forest-background.webp') center 27%/100% auto no-repeat;
+  background: #f6f2dc url('/assets/figma21/forest-background.webp') center 27%/100% auto no-repeat;
   padding: 0 18px;
 }
 .room-banner .page-heading {
@@ -1227,7 +1227,7 @@ input[type='radio'] {
   line-height: 1.7;
 }
 .report-banner {
-  background: #f2f5df url('/assets/journal/forest-background.webp') center 24%/100% auto;
+  background: #f2f5df url('/assets/figma21/forest-background.webp') center 24%/100% auto;
   border: 1px solid #d8c8a7;
   border-radius: 18px 14px 20px 16px;
   padding: 17px;
@@ -1427,7 +1427,7 @@ input[type='radio'] {
   padding-bottom: 32px;
   background:
     linear-gradient(#fffaf0e8, #fffaf0e8),
-    url('/assets/journal/forest-background.webp') center bottom/100% auto no-repeat;
+    url('/assets/figma21/forest-background.webp') center bottom/100% auto no-repeat;
   min-height: 100dvh;
 }
 .feedback-intro {
@@ -1532,7 +1532,7 @@ input[type='radio'] {
   position: relative;
   background:
     linear-gradient(#fff9e9 0, #fff9e9dd 72px, transparent 145px),
-    #d9e9ba url('/assets/journal/forest-background.webp') center 53% / cover;
+    #d9e9ba url('/assets/figma21/forest-background.webp') center 53% / cover;
   min-height: 365px;
   isolation: isolate;
   overflow: hidden;

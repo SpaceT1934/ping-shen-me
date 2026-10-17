@@ -5,7 +5,7 @@ import { manualDraftSchema, type ManualDraft } from '@apple/contracts';
 import { z } from 'zod';
 import { useGarden } from '../../app/garden-context';
 import { PageHeading } from '../../components/PageHeading';
-import { LineIcon, ArtIcon } from '../../components/Illustration';
+import { LineIcon, ArtIcon, Illustration } from '../../components/Illustration';
 import { AmbientScene, LivingMascot } from '../../components/AmbientScene';
 import { createUuid } from '../../lib/uuid';
 import { EntryList } from '../projects/components/EntryList';
@@ -125,7 +125,13 @@ export function RecordsPage() {
     setInputSource('text');
     setDrafts([]);
     setConfirming(false);
-    if (feedback.growthProjectIds.length) navigate('/growth', { state: { feedback } });
+    if (feedback.growthProjectIds.length)
+      navigate('/growth', {
+        state: {
+          feedback,
+          actionCount: selected.filter((item) => item.type === 'action' && item.projectId).length,
+        },
+      });
     else if (feedback.resultIds[0]) navigate(`/fruit?result=${feedback.resultIds[0]}`);
     else setNotice('记录已保存，可以在项目详情或记录历史里查看。');
   };
@@ -151,6 +157,35 @@ export function RecordsPage() {
         <p className="small-print">
           请检查分类、方向和日期；未归类记录也能保存。目标进度由你确认贡献数量。
         </p>
+        {drafts[0]?.sourceText && (
+          <section className="fig-card ai-classification">
+            <h2>AI 建议归类</h2>
+            <p>
+              {projects.find((project) => project.id === drafts[0]?.projectId)?.name ||
+                '还没有匹配的项目，可以自行选择。'}
+            </p>
+            <p className="small-print">也可能是以下项目：</p>
+            <div className="fig-filter">
+              {projects
+                .filter((project) => project.status === 'active')
+                .map((project) => (
+                  <button
+                    key={project.id}
+                    aria-pressed={drafts[0]?.projectId === project.id}
+                    onClick={() =>
+                      update(drafts[0]!.key, {
+                        projectId: project.id,
+                        goalId: null,
+                        contribution: 0,
+                      })
+                    }
+                  >
+                    {project.name}
+                  </button>
+                ))}
+            </div>
+          </section>
+        )}
         <div className="draft-list">
           {drafts.map((item) => {
             const project = projects.find((project) => project.id === item.projectId);
@@ -375,6 +410,15 @@ export function RecordsPage() {
             查看记录历史
           </button>
           <Link to="/projects">看看我的方向</Link>
+        </div>
+        <div className="record-growth-preview">
+          <Illustration name="tree-large-full" size={130} />
+          <p>
+            每一次行动，
+            <br />
+            都在为小树浇水。
+          </p>
+          <Illustration name="mascot-watering" size={102} />
         </div>
         <button
           className="coral-button full-width"

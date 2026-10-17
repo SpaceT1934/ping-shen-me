@@ -14,16 +14,19 @@ export function ProjectsPage() {
   );
   return (
     <div className="paper-page">
-      <PageHeading title="我的成长方向" />
+      <PageHeading title="我的项目" />
+      <div className="fig-links">
+        <Link to="/goals">目标清单 →</Link>
+        <Link to="/collection">果实收藏 →</Link>
+      </div>
       <div className="page-intro">
-        <p className="eyebrow">每一种努力，都有自己的枝丫</p>
-        <h2>正在慢慢长大的事</h2>
-        <p>不用一次走很远，今天向前一点就好。</p>
+        <p>一共有 {projects.length} 棵树，一起慢慢长大吧！</p>
       </div>
       <div className="segment-tabs" role="tablist" aria-label="项目状态">
         {[
           ['active', '进行中'],
-          ['completed', '已结束'],
+          ['completed', '已完成'],
+          ['paused', '暂缓'],
           ['archived', '已归档'],
         ].map(([value, label]) => (
           <button
@@ -33,7 +36,7 @@ export function ProjectsPage() {
             className={status === value ? 'selected' : ''}
             onClick={() => setStatus(value!)}
           >
-            {label}
+            {label}（{projects.filter((item) => item.status === value).length}）
           </button>
         ))}
       </div>
@@ -62,7 +65,10 @@ export function ProjectsPage() {
                 <div className="progress-track">
                   <span style={{ width: `${project.percent}%` }} />
                 </div>
-                <span>{Math.round(project.percent)}%</span>
+                <span>
+                  {project.progress}/{project.target}
+                  {project.unit}
+                </span>
               </div>
             )}
             <div className="project-meta">
@@ -70,7 +76,10 @@ export function ProjectsPage() {
                 {project.growth.count} 次行动 · {project.growth.harvestCount} 颗收获
               </span>
               <span>
-                {project.growth.name}
+                {project.growth.name}{' '}
+                {project.growth.stageIndex === 3
+                  ? `${project.growth.threshold * 3}+`
+                  : `${project.growth.stageIndex * project.growth.threshold}–${(project.growth.stageIndex + 1) * project.growth.threshold - 1}`}
                 <span className="little-dot" />
               </span>
             </div>

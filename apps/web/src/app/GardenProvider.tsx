@@ -148,20 +148,28 @@ export function GardenProvider({ children }: { children: ReactNode }) {
         hasStarted: state.onboardingCompleted,
         busy: mutation.isPending,
         startGarden: async () => Boolean(await execute({ type: 'onboard' })),
-        addProject: async (name, goal, icon = 'green') => {
+        addProject: async (name, goal, icon = 'green', category) => {
           const result = await execute({
             type: 'project.create',
             name,
+            category,
             goal,
             icon,
             color: icon === 'book' ? 'blue' : icon === 'work' ? 'peach' : 'sage',
           });
           return result?.state.projects.find((project) => project.name === name)?.id || null;
         },
-        editProject: async (id, name, icon, color) =>
-          Boolean(await execute({ type: 'project.update', id, name, icon, color })),
-        addProjects: async (projects) =>
-          Boolean(await execute({ type: 'project.batch', projects })),
+        editProject: async (id, name, icon, color, category) =>
+          Boolean(await execute({ type: 'project.update', id, name, icon, color, category })),
+        addProjects: async (projects) => {
+          const previousIds = new Set(state.projects.map((project) => project.id));
+          const result = await execute({ type: 'project.batch', projects });
+          return (
+            result?.state.projects
+              .filter((project) => !previousIds.has(project.id))
+              .map((project) => project.id) || null
+          );
+        },
         /* 单个项目与批量确认使用同一套业务命令。 */
         setProjectStatus: async (id, status) =>
           Boolean(await execute({ type: 'project.status', id, status })),

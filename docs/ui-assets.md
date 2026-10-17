@@ -73,3 +73,9 @@ Use case: background-extraction. First image is edit target: isolate its red app
 ## 动效与加载
 
 角色低幅度呼吸、星光缓慢明暗、摘果后落入果篮。所有动效尊重 `prefers-reduced-motion`，后台暂停环境动效。背景 WebP、独立插画及本地字体共享浏览器缓存；不在页面间下载整张截图。
+
+## 2026-10-18：psm_21.fig
+
+当前页面以新版 psm_21.fig 为准。新素材集中在 `apps/web/public/assets/figma21`；manifest 记录每个可见素材的 Figma 节点、原图哈希、原始尺寸和运行尺寸。69 个可见位图包含 @4x 替换层和独立浇水角色，导航使用该文件导出的矢量图标。被 Figma 隐藏的旧位图不再作为实现来源，旧 journal 位图和操作图标目录已经移出运行资产；journal/fonts 保留。
+
+背景约 173/204 KiB，全部新位图合计约 1.4 MiB，不在浏览器加载原始 PNG。动效来自 Figma 的欢迎页 MCP 输出和本地逐节点时间线；参数与界面绑定分离，不使用整页截图作为页面。

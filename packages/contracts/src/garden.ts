@@ -24,10 +24,11 @@ export const projectSchema = z.object({
   name: title,
   icon: spriteSchema,
   color: colorSchema,
-  status: z.enum(['active', 'completed', 'archived']),
+  category: z.string().trim().min(1).max(20).optional(),
+  status: z.enum(['active', 'completed', 'paused', 'archived']),
   createdAt: time,
   currentGoalId: id.nullable(),
-  treeStageThreshold: z.union([z.literal(1), z.literal(2)]).optional(),
+  treeStageThreshold: z.union([z.literal(1), z.literal(2), z.literal(3)]).optional(),
   serverGrowth: z
     .object({ count: z.number().int().nonnegative(), stageIndex: z.number().int().nonnegative() })
     .optional(),
@@ -205,6 +206,7 @@ const payloadSchema = z.discriminatedUnion('type', [
           name: title,
           icon: spriteSchema,
           color: colorSchema,
+          category: z.string().trim().min(1).max(20).optional(),
           goal: goalInput.nullable(),
         }),
       )
@@ -216,6 +218,7 @@ const payloadSchema = z.discriminatedUnion('type', [
     name: title,
     icon: spriteSchema,
     color: colorSchema,
+    category: z.string().trim().min(1).max(20).optional(),
     goal: goalInput.nullable(),
   }),
   z.object({
@@ -224,11 +227,12 @@ const payloadSchema = z.discriminatedUnion('type', [
     name: title,
     icon: spriteSchema,
     color: colorSchema,
+    category: z.string().trim().min(1).max(20).optional(),
   }),
   z.object({
     type: z.literal('project.status'),
     id,
-    status: z.enum(['active', 'completed', 'archived']),
+    status: z.enum(['active', 'completed', 'paused', 'archived']),
   }),
   z.object({
     type: z.literal('goal.create'),
@@ -240,7 +244,7 @@ const payloadSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('project.threshold'),
     id,
-    threshold: z.union([z.literal(1), z.literal(2)]),
+    threshold: z.union([z.literal(1), z.literal(2), z.literal(3)]),
   }),
   z.object({
     type: z.literal('goal.progress'),

@@ -40,6 +40,34 @@ async function project(cookie: string, name = '自媒体') {
   return result.json().data.projects[0].id as string;
 }
 describe('AI 接入 V0.2（不调用真实模型）', () => {
+  it('AI 任务拆解只读取自己的进行中项目，草稿不写入业务数据，错误结果被拒绝', async () => {
+    const cookie = await session();
+    const own = await project(cookie, '我的学习');
+    const foreign = await project(await session(), '他人的工作');
+    const before = await snapshot(cookie);
+    const fetch = mockProvider({
+      tasks: [{ title: '练习听力', description: '从一段短听力开始，记录没有听懂的部分。' }],
+    });
+    expect(
+      (await post(cookie, '/ai/tasks/plan', { project_id: foreign, text: '达到7分' })).statusCode,
+    ).toBe(404);
+    expect(fetch).not.toHaveBeenCalled();
+    const response = await post(cookie, '/ai/tasks/plan', {
+      project_id: own,
+      text: '三个月达到7分',
+    });
+    expect(response.statusCode).toBe(200);
+    expect(response.json().data.tasks).toHaveLength(1);
+    expect(JSON.parse(fetch.mock.calls[0]![1].body)).toEqual({
+      project_name: '我的学习',
+      text: '三个月达到7分',
+    });
+    expect((await snapshot(cookie)).version).toBe(before.version);
+    mockProvider({ tasks: [{ title: '', description: 'invalid' }] });
+    expect(
+      (await post(cookie, '/ai/tasks/plan', { project_id: own, text: '三个月达到7分' })).statusCode,
+    ).toBe(503);
+  });
   it('无会话和外来来源不能调用 AI', async () => {
     const fetch = mockProvider({});
     expect(

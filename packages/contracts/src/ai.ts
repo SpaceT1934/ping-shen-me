@@ -1,4 +1,12 @@
 import { z } from 'zod';
+export const projectCategorySchema = z.enum([
+  '工作事业',
+  '学习成长',
+  '健康运动',
+  '生活习惯',
+  '兴趣爱好',
+  '其他',
+]);
 
 export const aiCapabilitiesSchema = z.object({
   ai_configured: z.boolean(),
@@ -16,6 +24,7 @@ export const projectAnalysisSchema = z.object({
         name: z.string().trim().min(1).max(80),
         goal_text: z.string().trim().min(1).max(200).nullable(),
         source_text: z.string().min(1).max(300),
+        category: projectCategorySchema.default('其他'),
       }),
     )
     .max(20),
@@ -44,6 +53,26 @@ export const transcriptionInputSchema = z.object({
   mime_type: z.enum(['audio/wav', 'audio/mpeg', 'audio/webm', 'audio/ogg', 'audio/flac']),
 });
 export const transcriptionSchema = z.object({ text: z.string().trim().min(1).max(2000) });
-export type ProjectCandidate = { name: string; goalText: string | null; sourceText: string };
+export type ProjectCandidate = {
+  name: string;
+  goalText: string | null;
+  sourceText: string;
+  category?: string;
+};
 
 export const actionFeedbackSchema = z.object({ text: z.string().trim().min(1).max(60) });
+export const taskPlanInputSchema = z.object({
+  project_id: z.string().min(1).max(100),
+  text: z.string().trim().min(1).max(200),
+});
+export const taskPlanSchema = z.object({
+  tasks: z
+    .array(
+      z.object({
+        title: z.string().trim().min(1).max(80),
+        description: z.string().trim().min(1).max(110),
+      }),
+    )
+    .min(1)
+    .max(6),
+});

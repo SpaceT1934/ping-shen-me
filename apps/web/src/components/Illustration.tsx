@@ -4,13 +4,27 @@ export type SpriteName =
 export type MascotMood = 'welcome' | 'wink' | 'cheer' | 'sad' | 'feedback' | 'harvest';
 const assetFor: Record<SpriteName, string> = {
   mascot: 'mascot-welcome',
-  apple: 'goal-fruit-red',
+  apple: 'fruit-red',
   golden: 'fruit-orange',
-  green: 'goal-fruit-green',
+  green: 'fruit-green',
   video: 'category-work',
   book: 'category-study',
   work: 'category-work',
   calendar: 'calendar',
+};
+const artAliases: Record<string, string> = {
+  'goal-fruit-red': 'fruit-red',
+  'goal-fruit-green': 'fruit-green',
+  'tree-sprout': 'new-sprout',
+  'tree-bare': 'stage-growing',
+  'basket-empty': 'basket',
+};
+const vectorArt: Record<string, string> = {
+  'nav-tree': 'home',
+  'nav-folder': 'projects',
+  'nav-chart': 'review',
+  'nav-smile': 'user',
+  'nav-plus': 'plus',
 };
 export function Illustration({
   name,
@@ -24,7 +38,11 @@ export function Illustration({
   return (
     <img
       className={`journal-art ${className}`}
-      src={`/assets/journal/${name}.webp`}
+      src={
+        vectorArt[name]
+          ? `/assets/figma21/icons/${vectorArt[name]}.svg`
+          : `/assets/figma21/${artAliases[name] || name}.webp`
+      }
       alt=""
       aria-hidden="true"
       width={size}
@@ -77,7 +95,11 @@ export function LineIcon({ name, size = 24 }: { name: IconName; size?: number })
   return (
     <img
       className="journal-line-icon"
-      src={`/assets/journal/icons/${operationFor[name]}.svg`}
+      src={
+        name === 'settings'
+          ? '/assets/figma21/settings.webp'
+          : `/assets/figma21/icons/${operationFor[name]}.svg`
+      }
       width={size}
       height={size}
       alt=""

@@ -1,13 +1,16 @@
 import { Link } from 'react-router-dom';
 import { LineIcon } from './Illustration';
+import type { ReactNode } from 'react';
 export function PageHeading({
   title,
   back = '/',
   onBack,
+  action,
 }: {
   title: string;
   back?: string;
   onBack?: () => void;
+  action?: ReactNode;
 }) {
   return (
     <header className="page-heading">
@@ -21,7 +24,7 @@ export function PageHeading({
         </Link>
       )}
       <h1>{title}</h1>
-      <span />
+      {action || <span />}
     </header>
   );
 }

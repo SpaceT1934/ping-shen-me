@@ -7,7 +7,9 @@ import { page, resourceId, idempotencyKey, projectFor } from './http-utils.js';
 export function registerProjectRoutes(app: FastifyInstance, { service, sessions }: RouteContext) {
   app.get('/projects', async (request) => {
     const query = z
-      .object({ status: z.enum(['active', 'completed', 'archived', 'all']).default('active') })
+      .object({
+        status: z.enum(['active', 'completed', 'paused', 'archived', 'all']).default('active'),
+      })
       .parse(request.query);
     const state = await service.read(await sessions.require(request));
     return page(
@@ -35,6 +37,7 @@ export function registerProjectRoutes(app: FastifyInstance, { service, sessions 
           const state = run({
             type: 'project.create',
             name: item.name,
+            category: item.category,
             icon: item.icon,
             color: item.color,
             goal: item.goal
@@ -66,13 +69,19 @@ export function registerProjectRoutes(app: FastifyInstance, { service, sessions 
       (initial, run) => {
         const project = projectFor(initial, id);
         let state = initial;
-        if (body.name !== undefined || body.icon !== undefined || body.color !== undefined)
+        if (
+          body.name !== undefined ||
+          body.icon !== undefined ||
+          body.color !== undefined ||
+          body.category !== undefined
+        )
           state = run({
             type: 'project.update',
             id,
             name: body.name ?? project.name,
             icon: body.icon ?? project.icon,
             color: body.color ?? project.color,
+            category: body.category,
           });
         if (body.current_goal_id)
           state = run({ type: 'goal.primary', projectId: id, goalId: body.current_goal_id });

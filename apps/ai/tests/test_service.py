@@ -41,6 +41,23 @@ def test_auth_is_required_without_model_call():
     assert client.get("/health").json()["status"] == "ok"
 
 
+def test_task_plan_is_validated_and_remains_a_draft():
+    client, calls = setup({"tasks": [{"title": "听力练习", "description": "听一段短材料，并整理没有听懂的句子。"}]})
+    result = post(client, "/tasks/plan", {"text": "三个月达到雅思7分", "project_name": "雅思"})
+    assert result.status_code == 200
+    assert result.json()["tasks"][0]["title"] == "听力练习"
+    assert calls[0]["response_format"]["json_schema"]["strict"] is True
+    assert "不声称任务已经完成" in calls[0]["messages"][0]["content"]
+
+
+@pytest.mark.parametrize("tasks", [[], [{"title": "", "description": "无效"}], [{"title": "太长", "description": "长" * 111}]])
+def test_invalid_task_plan_is_not_returned(tasks):
+    client, calls = setup({"tasks": tasks})
+    result = post(client, "/tasks/plan", {"text": "学习英语", "project_name": "英语"})
+    assert result.status_code == 503
+    assert result.json()["error"]["code"] == "AI_PARSE_FAILED"
+
+
 def test_records_are_drafts_with_owned_project_ids_and_traceable_source():
     client, calls = setup({"items": [
         {"content": "剪完视频", "type": "action", "project_id": "owned", "emotion": None, "source_text": "剪完视频"},

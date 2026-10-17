@@ -65,7 +65,9 @@ export function ProjectsPage() {
               </div>
             )}
             <div className="project-meta">
-              <span>{project.growth.count} 次行动</span>
+              <span>
+                {project.growth.count} 次行动 · {project.growth.harvestCount} 颗收获
+              </span>
               <span>
                 {project.growth.name}
                 <span className="little-dot" />

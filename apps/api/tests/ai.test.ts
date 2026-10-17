@@ -200,3 +200,22 @@ describe('AI 接入 V0.2（不调用真实模型）', () => {
     expect(fetch).toHaveBeenCalledTimes(10);
   });
 });
+
+it('短反馈只读已保存行动，模型不可用时回退且不改业务数据', async () => {
+  const cookie = await session();
+  const p = await project(cookie);
+  await post(cookie, '/record-batches/commit', {
+    items: [
+      { client_item_id: 'feedback-action', content: '剪完视频', type: 'action', project_id: p },
+    ],
+  });
+  const before = await snapshot(cookie);
+  const fetch = mockProvider({ error: { code: 'UNAVAILABLE' } }, 503);
+  const feedback = await post(cookie, '/ai/feedback', {});
+  expect(feedback.statusCode).toBe(200);
+  expect(feedback.json().data.text).toContain('努力');
+  expect(JSON.parse(fetch.mock.calls[0]![1].body).actions).toEqual(['剪完视频']);
+  expect(await snapshot(cookie)).toEqual(before);
+  await post(cookie, '/ai/feedback', {});
+  expect(fetch).toHaveBeenCalledTimes(1);
+});

@@ -10,6 +10,7 @@ import {
   reportSummarySchema,
   transcriptionInputSchema,
   transcriptionSchema,
+  actionFeedbackSchema,
 } from '@apple/contracts';
 import { DomainError } from '@apple/domain';
 import type { GardenRepository } from '../../repositories/garden.repository.js';
@@ -25,6 +26,7 @@ const pythonRecords = z.object({
         content: z.string(),
         type: z.enum(['action', 'task', 'idea', 'goal']),
         project_id: z.string().nullable(),
+        goal_id: z.string().nullable().default(null),
         emotion: z.string().nullable(),
         source_text: z.string(),
       }),
@@ -111,6 +113,9 @@ export const registerAiRoutes: FastifyPluginAsync<{
         id: p.id,
         name: p.name,
         goal: state.goals.find((g) => g.id === p.currentGoalId)?.title ?? null,
+        goals: state.goals
+          .filter((g) => g.projectId === p.id && !g.completedAt && !g.archivedAt)
+          .map((g) => ({ id: g.id, title: g.title, mode: g.type, unit: g.unit })),
       }));
     const ids = new Set(projects.map((p) => p.id));
     const result = await call('/records/analyze', pythonRecords, { text: body.text, projects });
@@ -120,6 +125,17 @@ export const registerAiRoutes: FastifyPluginAsync<{
         type: item.type,
         client_item_id: randomUUID(),
         project_id: item.project_id && ids.has(item.project_id) ? item.project_id : null,
+        goal_id:
+          item.type === 'action' &&
+          state.goals.some(
+            (goal) =>
+              goal.id === item.goal_id &&
+              goal.projectId === item.project_id &&
+              !goal.completedAt &&
+              !goal.archivedAt,
+          )
+            ? item.goal_id
+            : null,
         emotion: item.emotion,
         source_text: item.source_text,
       })),
@@ -164,6 +180,40 @@ export const registerAiRoutes: FastifyPluginAsync<{
     if (summaries.size >= 200) summaries.delete(summaries.keys().next().value!);
     summaries.set(key, { at: Date.now(), value: result });
     return result;
+  });
+  const feedbackCache = new Map<string, { at: number; value: { text: string } }>();
+  app.post('/ai/feedback', async (request) => {
+    z.object({})
+      .strict()
+      .parse(request.body ?? {});
+    const user = await sessions.require(request);
+    const state = await repository.read(user);
+    const actions = state.records
+      .filter((item) => !item.deletedAt && item.type === 'action')
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .slice(0, 3)
+      .map((item) => item.content);
+    const fallback = {
+      text: actions.length
+        ? '今天的努力已经好好记下了，按自己的节奏慢慢来。'
+        : '每个想开始的方向，都值得被温柔照顾。',
+    };
+    if (!actions.length) return fallback;
+    const key = `${user}:${state.version}`;
+    const cached = feedbackCache.get(key);
+    if (cached && Date.now() - cached.at < 600_000) return cached.value;
+    limit(user);
+    let value = fallback;
+    try {
+      value = await call('/feedback', actionFeedbackSchema, { actions });
+    } catch {
+      /* Feedback never blocks saved actions or navigation. */
+    }
+    for (const [id, item] of feedbackCache)
+      if (Date.now() - item.at >= 600_000) feedbackCache.delete(id);
+    if (feedbackCache.size >= 200) feedbackCache.delete(feedbackCache.keys().next().value!);
+    feedbackCache.set(key, { at: Date.now(), value });
+    return value;
   });
   app.post('/asr/transcribe', { bodyLimit: 7 * 1024 * 1024 }, async (request) => {
     const user = await sessions.require(request);

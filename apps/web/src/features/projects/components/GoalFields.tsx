@@ -72,7 +72,7 @@ export function GoalFields({
       <p className="small-print">
         {value.type === 'manual'
           ? '达成时由你确认，不根据行动次数自动判断。'
-          : '行动成长与目标进度分别计算，进度请在项目详情中明确更新。'}
+          : '行动只作浇水反馈；实际目标贡献可在保存记录时确认，也可在项目详情更新。'}
       </p>
     </div>
   );

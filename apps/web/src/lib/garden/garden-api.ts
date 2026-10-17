@@ -59,25 +59,21 @@ function hydrate(
       color: item.color,
       createdAt: item.created_at,
       currentGoalId: item.goal?.id || null,
-      serverGrowth: { count: item.growth.action_count, stageIndex: item.growth.stage },
+      treeStageThreshold: item.growth.tree_stage_threshold,
     })),
     goals: projects.flatMap((item) =>
-      item.goal
-        ? [
-            {
-              id: item.goal.id,
-              projectId: item.id,
-              title: item.goal.title,
-              type: item.goal.mode === 'percent' ? ('percentage' as const) : item.goal.mode,
-              target: item.goal.target_value ?? 1,
-              currentValue: item.goal.current_value ?? (item.goal.completed_at ? 1 : 0),
-              unit: item.goal.unit,
-              createdAt: item.goal.created_at,
-              completedAt: item.goal.completed_at,
-              archivedAt: null,
-            },
-          ]
-        : [],
+      (item.goals ?? (item.goal ? [item.goal] : [])).map((goal) => ({
+        id: goal.id,
+        projectId: item.id,
+        title: goal.title,
+        type: goal.mode === 'percent' ? ('percentage' as const) : goal.mode,
+        target: goal.target_value ?? 1,
+        currentValue: goal.current_value ?? (goal.completed_at ? 1 : 0),
+        unit: goal.unit,
+        createdAt: goal.created_at,
+        completedAt: goal.completed_at,
+        archivedAt: null,
+      })),
     ),
     records: records.map((item) => ({
       id: item.id,
@@ -92,8 +88,8 @@ function hydrate(
       sourceText: item.source_text,
       emotion: item.emotion,
       occurredAt: item.occurred_at,
-      goalId: null,
-      contribution: 0,
+      goalId: item.goal_id,
+      contribution: item.contribution,
     })),
     tasks: tasks.map((item) => ({
       id: item.id,
@@ -169,7 +165,7 @@ async function mutate(envelope: CommandEnvelope) {
       break;
     case 'project.create': {
       if (command.goal) goalCreateSchema.parse(goalBody(command.goal));
-      const created = await write(
+      await write(
         '/projects/batch',
         'POST',
         {
@@ -179,19 +175,12 @@ async function mutate(envelope: CommandEnvelope) {
               name: command.name,
               icon: command.icon,
               color: command.color,
+              goal: command.goal ? goalBody(command.goal) : null,
             },
           ],
         },
         z.object({ projects: z.array(projectDtoSchema) }),
       );
-      if (command.goal)
-        await write(
-          `/projects/${created.projects[0]!.id}/goals`,
-          'POST',
-          goalBody(command.goal),
-          z.object({}),
-          ':goal',
-        );
       break;
     }
     case 'project.batch': {
@@ -221,6 +210,22 @@ async function mutate(envelope: CommandEnvelope) {
       break;
     case 'project.status':
       await write(`/projects/${command.id}`, 'PATCH', { status: command.status }, z.object({}));
+      break;
+    case 'goal.primary':
+      await write(
+        `/projects/${command.projectId}`,
+        'PATCH',
+        { current_goal_id: command.goalId },
+        z.object({}),
+      );
+      break;
+    case 'project.threshold':
+      await write(
+        `/projects/${command.id}`,
+        'PATCH',
+        { tree_stage_threshold: command.threshold },
+        z.object({}),
+      );
       break;
     case 'goal.create':
       await write(
@@ -280,6 +285,9 @@ async function mutate(envelope: CommandEnvelope) {
             content: item.content,
             type: item.type,
             project_id: item.projectId,
+            goal_id: item.goalId ?? null,
+            contribution: item.contribution,
+            progress_confirmed: item.contribution > 0,
             emotion: item.emotion ?? null,
             source_text: item.sourceText ?? item.content,
             ...(item.type === 'task'

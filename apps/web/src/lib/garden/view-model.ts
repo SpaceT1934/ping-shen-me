@@ -1,5 +1,5 @@
 import type { GardenState } from '@apple/contracts';
-import { dateInZone, growthFor, goalPercent, growthStages } from '@apple/domain';
+import { dateInZone, growthFor, goalPercent } from '@apple/domain';
 export function createGardenView(state: GardenState) {
   const today = dateInZone(new Date(), state.timeZone);
   return {
@@ -16,13 +16,8 @@ export function createGardenView(state: GardenState) {
         unit: goal?.unit || '',
         percent: goalPercent(goal),
         harvested: state.results.some((item) => item.projectId === project.id && item.harvestedAt),
-        growth: project.serverGrowth
-          ? {
-              ...growthStages[project.serverGrowth.stageIndex]!,
-              count: project.serverGrowth.count,
-              stageIndex: project.serverGrowth.stageIndex,
-            }
-          : growthFor(state, project.id),
+        goals: state.goals.filter((item) => item.projectId === project.id && !item.archivedAt),
+        growth: growthFor(state, project.id),
       };
     }),
     tasks: state.tasks

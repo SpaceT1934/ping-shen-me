@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { randomUUID } from 'node:crypto';
 import { commitInputSchema, recordPatchSchema } from '@apple/contracts';
 import { DomainError, dateInZone } from '@apple/domain';
-import { recordDto, growthChanges } from './http-presenters.js';
+import { recordDto, growthChanges, resultDto } from './http-presenters.js';
 import {
   identifier,
   page,
@@ -95,7 +95,8 @@ export function registerRecordRoutes(app: FastifyInstance, { service, sessions }
             source: body.source,
             sourceText: item.source_text,
             emotion: item.emotion,
-            contribution: 0,
+            goalId: item.goal_id,
+            contribution: item.contribution,
             goalType: 'manual',
             target: 1,
             unit: '',
@@ -122,7 +123,9 @@ export function registerRecordRoutes(app: FastifyInstance, { service, sessions }
           batch_id: batchId,
           saved_items: savedItems,
           growth_changes: growthChanges(before, state),
-          completed_results: [],
+          completed_results: state.results
+            .filter((item) => !before.results.some((old) => old.id === item.id))
+            .map(resultDto),
           feedback_text: '记录已保存，每一步都算数。',
         };
       },
@@ -148,7 +151,11 @@ export function registerRecordRoutes(app: FastifyInstance, { service, sessions }
           recordType: body.type ?? record.type,
           projectId: body.project_id === undefined ? record.projectId : body.project_id,
           date: dateInZone(occurredAt),
-          contribution: 0,
+          contribution:
+            (body.project_id === undefined || body.project_id === record.projectId) &&
+            (body.type === undefined || body.type === record.type)
+              ? record.contribution
+              : 0,
         });
         const updated = state.records.find((item) => item.id === id)!;
         Object.assign(updated, {

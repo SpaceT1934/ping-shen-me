@@ -166,3 +166,34 @@ def test_configuration_does_not_allow_credentials_or_redirect_targets():
     assert not Settings(api_key="x", base_url="http://test.cn-beijing.maas.aliyuncs.com/compatible-mode/v1").configured
     assert not Settings(api_key="x", base_url=BASE + "?secret=1").configured
     assert "test-provider-key" not in repr(Settings(api_key="test-provider-key"))
+
+
+def test_goal_match_must_belong_to_matched_project_and_never_changes_progress():
+    client, calls = setup({"items": [
+        {"content": "剪完视频", "type": "action", "project_id": "p1", "goal_id": "g1",
+         "emotion": None, "source_text": "剪完视频"},
+        {"content": "背了单词", "type": "action", "project_id": "p2", "goal_id": "g1",
+         "emotion": None, "source_text": "背了单词"},
+    ]})
+    response = post(client, "/records/analyze", {
+        "text": "剪完视频。背了单词", "projects": [
+            {"id": "p1", "name": "视频", "goals": [
+                {"id": "g1", "title": "发布10条视频", "mode": "count", "unit": "条"}]},
+            {"id": "p2", "name": "学习", "goals": []},
+        ]})
+    assert response.status_code == 200
+    items = response.json()["items"]
+    assert items[0]["goal_id"] == "g1"
+    assert items[1]["goal_id"] is None
+    assert "contribution" not in items[0]
+    assert "剪完视频不等于发布视频" in calls[0]["messages"][0]["content"]
+
+
+def test_short_feedback_is_bounded_and_does_not_claim_growth():
+    client, calls = setup({"text": "今天的努力已经被好好记下了。"})
+    response = post(client, "/feedback", {"actions": ["剪完视频"]})
+    assert response.status_code == 200
+    assert response.json()["text"] == "今天的努力已经被好好记下了。"
+    assert "不声称目标完成、果实成熟或小树升级" in calls[0]["messages"][0]["content"]
+    client, _ = setup({"text": "字" * 61})
+    assert post(client, "/feedback", {"actions": ["剪完视频"]}).status_code == 503

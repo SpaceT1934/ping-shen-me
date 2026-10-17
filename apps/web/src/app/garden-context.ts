@@ -36,6 +36,8 @@ type Context = GardenView & {
   deleteEntry: (id: string) => Promise<boolean>;
   updateProgress: (goalId: string, value: number) => Promise<Feedback | null>;
   createGoal: (projectId: string, goal: GoalInput, replace: boolean) => Promise<Feedback | null>;
+  setPrimaryGoal: (projectId: string, goalId: string) => Promise<boolean>;
+  setTreeThreshold: (projectId: string, threshold: 1 | 2) => Promise<boolean>;
   harvestResult: (id: string, followUp: 'continue' | 'complete' | 'next_goal') => Promise<boolean>;
 };
 export const GardenContext = createContext<Context | null>(null);

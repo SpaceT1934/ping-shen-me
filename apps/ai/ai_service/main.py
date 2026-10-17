@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from .config import Settings
-from .models import AudioRequest, ProjectRequest, RecordRequest, ReportRequest
+from .models import AudioRequest, ProjectRequest, RecordRequest, ReportRequest, FeedbackRequest
 from .provider import Bailian, ServiceError
 
 
@@ -70,6 +70,10 @@ def create_app(settings=None, provider=None):
     @app.post("/internal/v1/reports/summarize", dependencies=[Depends(authorize)])
     def summarize(body: ReportRequest):
         return provider.summarize(body)
+
+    @app.post("/internal/v1/feedback", dependencies=[Depends(authorize)])
+    def feedback(body: FeedbackRequest):
+        return provider.feedback(body)
 
     @app.post("/internal/v1/asr/transcribe", dependencies=[Depends(authorize)])
     def transcribe(body: AudioRequest):

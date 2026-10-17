@@ -83,7 +83,7 @@ export function SettingsPage() {
         </button>
         {exportError && <p role="alert">{exportError}</p>}
         <p className="small-print">
-          成长阶段暂采用：刚种下、萌芽、枝叶舒展、茂盛。每条有效行动等权累计。
+          小树苗 → 幼树 → 茂盛树 → 成熟树。默认每手动收获 2 颗果实升级一次，各棵树独立计算。
         </p>
       </section>
       <p className="settings-footer">

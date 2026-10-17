@@ -7,6 +7,8 @@ const content = z.string().trim().min(1).max(2000);
 export const rangeSchema = z.enum(['7d', '30d', 'month', 'all']);
 export const growthDtoSchema = z.object({
   action_count: z.number().int().nonnegative(),
+  harvest_count: z.number().int().nonnegative().default(0),
+  tree_stage_threshold: z.union([z.literal(1), z.literal(2)]).default(2),
   stage: z.number().int().nonnegative(),
   stage_key: z.string(),
 });
@@ -27,6 +29,7 @@ export const projectDtoSchema = z.object({
   name: z.string(),
   status: z.enum(['active', 'completed', 'archived']),
   goal: goalDtoSchema.nullable(),
+  goals: z.array(goalDtoSchema).optional(),
   growth: growthDtoSchema,
   created_at: timestampSchema,
   icon: spriteSchema,
@@ -53,6 +56,8 @@ export const recordDtoSchema = z.object({
   occurred_at: timestampSchema,
   created_at: timestampSchema,
   source_task_id: id.nullable(),
+  goal_id: id.nullable().default(null),
+  contribution: z.number().nonnegative().default(0),
 });
 export const resultDtoSchema = z.object({
   id,
@@ -78,6 +83,9 @@ export const commitItemSchema = z
     content,
     type: z.enum(['action', 'task', 'idea', 'goal']),
     project_id: id.nullable(),
+    goal_id: id.nullable().default(null),
+    contribution: z.number().nonnegative().max(1e9).default(0),
+    progress_confirmed: z.boolean().default(false),
     emotion: z.string().max(100).nullable().default(null),
     source_text: z.string().max(10000).nullable().default(null),
     occurred_at: timestampSchema.optional(),
@@ -101,6 +109,21 @@ export const commitInputSchema = z
           message: '本批次条目编号不能重复',
         });
       ids.add(item.client_item_id);
+      if (
+        item.contribution > 0 &&
+        (!item.progress_confirmed || !item.goal_id || item.type !== 'action')
+      )
+        ctx.addIssue({
+          code: 'custom',
+          path: ['items', index, 'contribution'],
+          message: '目标贡献需要关联行动目标并由用户确认',
+        });
+      if (item.type !== 'action' && item.goal_id)
+        ctx.addIssue({
+          code: 'custom',
+          path: ['items', index, 'goal_id'],
+          message: '只有行动可以关联目标',
+        });
       if (item.type === 'task' && !item.project_id)
         ctx.addIssue({
           code: 'custom',
@@ -185,6 +208,8 @@ export const projectPatchSchema = z
     status: z.enum(['active', 'completed', 'archived']).optional(),
     icon: spriteSchema.optional(),
     color: colorSchema.optional(),
+    current_goal_id: id.optional(),
+    tree_stage_threshold: z.union([z.literal(1), z.literal(2)]).optional(),
   })
   .strict()
   .refine((value) => Object.keys(value).length > 0, '请提供需要修改的字段');

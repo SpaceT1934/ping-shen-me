@@ -106,6 +106,7 @@ export function EntryList({
                 {projects.find((project) => project.id === item.projectId)?.name || '未归类'} ·{' '}
                 {item.type === 'action' ? '行动' : item.type === 'goal' ? '目标建议' : '灵感'}
                 {item.sourceTaskId ? ' · 来自任务' : ''}
+                {item.contribution > 0 ? ` · 目标贡献 +${item.contribution}` : ''}
               </small>
             </div>
             {!item.sourceTaskId && (
@@ -126,7 +127,7 @@ export function EntryList({
           {editing === item.id && <EntryEditor entry={item} close={() => setEditing(null)} />}
           {removing === item.id && (
             <div className="inline-confirm">
-              删除后会调整成长次数，已达成果保留。
+              删除后会调整行动和未完成目标的贡献，已达成果保留。
               <button
                 disabled={busy}
                 className="text-button"

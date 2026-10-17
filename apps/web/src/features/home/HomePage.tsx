@@ -1,18 +1,25 @@
-import { useState } from 'react';
+import { useActionFeedback } from '../../lib/garden/use-action-feedback';
 import { Link } from 'react-router-dom';
+import { goalPercent } from '@apple/domain';
 import { useGarden } from '../../app/garden-context';
 import { LineIcon, PixelIcon } from '../../components/PixelIcon';
-import { AmbientScene, LivingMascot } from '../../components/AmbientScene';
+import { LivingMascot } from '../../components/AmbientScene';
+import { PixelTree, GoalFruit, FruitBasket } from '../../components/GardenVisuals';
 export function HomePage() {
-  const { projects, entries, results } = useGarden();
-  const [page, setPage] = useState(0);
+  const { projects, entries, results, state } = useGarden();
+  const encouragement = useActionFeedback(
+    state.version,
+    entries.some((item) => item.type === 'action'),
+  );
   const active = projects.filter((item) => item.status === 'active');
-  const pages = Math.max(1, Math.ceil(active.length / 4));
-  const current = Math.min(page, pages - 1);
   const pending = results.filter((item) => !item.harvestedAt);
+  const today = new Date().toLocaleDateString('zh-CN', {
+    month: 'long',
+    day: 'numeric',
+    weekday: 'long',
+  });
   return (
-    <div className="garden-home">
-      <AmbientScene />
+    <div className="garden-home forest-home">
       <header className="garden-header">
         <Link to="/settings" className="avatar" aria-label="我的">
           <PixelIcon name="mascot" size={42} />
@@ -25,82 +32,84 @@ export function HomePage() {
           <PixelIcon name="calendar" size={34} />
         </Link>
       </header>
-      <Link className="demo-tag" to="/projects">
-        我的成长树 · {active.length} 个方向
-      </Link>
-      <div className="speech-bubble home-bubble">
-        {active.length ? (
-          <>
-            今天也辛苦了！
-            <br />
-            一点点努力，也会让它长大 <span className="tiny-leaf">✦</span>
-          </>
-        ) : (
-          <>
-            每一个方向，都值得被照顾。
-            <br />
-            先种下你想开始的一件事吧。
-          </>
+      <p className="forest-date">{today}</p>
+      <div className="forest-greeting">
+        <LivingMascot size={66} />
+        <div className="speech-bubble">
+          <small>苹什猫</small>
+          <p>
+            {pending.length
+              ? `有 ${pending.length} 颗红果成熟了，等你亲手摘下。`
+              : active.length
+                ? encouragement.data?.text || '一点点努力都值得记下，果实按目标的进度慢慢成熟。'
+                : '每一个方向，都值得被照顾。先种下想开始的一件事吧。'}
+          </p>
+        </div>
+      </div>
+      <div className="forest-section-heading">
+        <h1>
+          我的小树林 <small>{active.length} 个方向</small>
+        </h1>
+        <Link to="/seed">＋ 种新树</Link>
+      </div>
+      {pending[0] && (
+        <Link className="forest-ripe-notice" to={`/fruit?result=${pending[0].id}`}>
+          有成熟果实，去摘下 →
+        </Link>
+      )}
+      <div className="forest-grid" aria-label="每个项目一棵树">
+        {active.map((project) => {
+          const onTree = project.goals.filter(
+            (goal) => !results.some((result) => result.goalId === goal.id && result.harvestedAt),
+          );
+          return (
+            <article className="forest-tree-card" key={project.id}>
+              <Link className="forest-tree-link" to={`/projects/${project.id}`}>
+                <span className="forest-tree-stage">{project.growth.name}</span>
+                <div className="forest-tree-art">
+                  <PixelTree stage={project.growth.stageIndex} />
+                  <span className="branch-fruits">
+                    {onTree.slice(0, 3).map((goal) => (
+                      <GoalFruit key={goal.id} percent={goalPercent(goal)} size={31} />
+                    ))}
+                  </span>
+                </div>
+                <h2 className="wood-label">{project.name}</h2>
+                <p>
+                  {project.goalId
+                    ? `${project.goal} · ${Math.round(project.percent)}%`
+                    : '给这棵树设一个目标'}
+                </p>
+                <small>
+                  {onTree.length} 颗目标果实 · {project.growth.count} 次行动
+                </small>
+              </Link>
+              <Link className="forest-basket-link" to={`/projects/${project.id}?tab=basket`}>
+                <FruitBasket count={project.growth.harvestCount} />
+                <span>我的果篮 →</span>
+              </Link>
+            </article>
+          );
+        })}
+        {!active.length && (
+          <Link to="/seed" className="forest-empty">
+            <PixelTree stage={0} />
+            <strong>＋ 种下第一个成长方向</strong>
+            <p>一件想做的事，就是一棵树的开始。</p>
+          </Link>
         )}
       </div>
-      {active.length ? (
-        <div className="tree-projects" aria-label="树上的项目">
-          {active.slice(current * 4, current * 4 + 4).map((project, index) => (
-            <Link
-              className={`tree-node tree-node-${index}`}
-              to={`/projects/${project.id}`}
-              key={project.id}
-            >
-              <span className="wood-label">{project.name}</span>
-              <PixelIcon
-                name={project.goalCompleted ? 'golden' : 'green'}
-                size={project.goalCompleted ? 90 : project.growth.size}
-              />
-              <small className="node-growth-label">
-                {project.goalCompleted ? '果实成熟' : project.growth.name} · {project.growth.count}{' '}
-                次
-              </small>
-            </Link>
-          ))}
-        </div>
-      ) : (
-        <Link to="/seed" className="empty-garden-cta wood-label">
-          ＋ 种下第一个方向
-        </Link>
-      )}
-      {pages > 1 && (
-        <div className="tree-pager" aria-label="项目翻页">
-          {Array.from({ length: pages }, (_, index) => (
-            <button
-              key={index}
-              aria-label={`第${index + 1}组项目`}
-              aria-pressed={current === index}
-              className={current === index ? 'selected' : ''}
-              onClick={() => setPage(index)}
-            />
-          ))}
-        </div>
-      )}
-      {pending[0] && (
-        <Link className="harvest-notice" to={`/fruit?result=${pending[0].id}`}>
-          有 {pending.length} 颗果实成熟了，去收获 →
-        </Link>
-      )}
-      <div className="garden-bottom">
-        <div className="mascot-ground">
-          <LivingMascot size={97} />
-        </div>
-        <div className="garden-caption">一边做很多事，一边慢慢长大。</div>
+      <div className="forest-footer">
         <Link className="quick-record" to="/records">
           <span className="mic-circle">
-            <LineIcon name="record" size={25} />
+            <LineIcon name="mic" size={25} />
           </span>
-          <span>记下今天做过的一点努力…</span>
+          <span>说一说 / 写下今天的努力</span>
           <LineIcon name="arrow" size={20} />
         </Link>
         <p className="today-summary">
-          已记录 {entries.filter((item) => item.type === 'action').length} 次努力 <span>·</span>{' '}
-          {active.length} 个成长方向
+          已记录 {entries.filter((item) => item.type === 'action').length} 次行动 · 收获{' '}
+          {results.filter((item) => item.harvestedAt).length} 颗果实
         </p>
       </div>
     </div>

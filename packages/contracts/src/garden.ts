@@ -27,6 +27,7 @@ export const projectSchema = z.object({
   status: z.enum(['active', 'completed', 'archived']),
   createdAt: time,
   currentGoalId: id.nullable(),
+  treeStageThreshold: z.union([z.literal(1), z.literal(2)]).optional(),
   serverGrowth: z
     .object({ count: z.number().int().nonnegative(), stageIndex: z.number().int().nonnegative() })
     .optional(),
@@ -160,6 +161,7 @@ const draftInput = z.object({
   type: z.enum(['action', 'task', 'idea', 'goal']),
   date,
   dueDate: date.nullable().default(null),
+  goalId: id.nullable().optional(),
   contribution: z.number().nonnegative().max(1e9).default(0),
   goalType: goalModeSchema.default('manual'),
   target: z.number().positive().max(1e9).default(1),
@@ -233,6 +235,12 @@ const payloadSchema = z.discriminatedUnion('type', [
     projectId: id,
     goal: goalInput,
     replace: z.boolean(),
+  }),
+  z.object({ type: z.literal('goal.primary'), projectId: id, goalId: id }),
+  z.object({
+    type: z.literal('project.threshold'),
+    id,
+    threshold: z.union([z.literal(1), z.literal(2)]),
   }),
   z.object({
     type: z.literal('goal.progress'),

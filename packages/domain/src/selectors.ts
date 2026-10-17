@@ -1,19 +1,26 @@
 import type { GardenState, Goal } from '@apple/contracts';
+// Stage is derived from manually harvested, unique goals; actions only receive watering feedback.
 export const growthStages = [
-  { threshold: 0, name: '刚种下', size: 48 },
-  { threshold: 1, name: '萌芽', size: 62 },
-  { threshold: 5, name: '枝叶舒展', size: 77 },
-  { threshold: 12, name: '茂盛', size: 90 },
+  { threshold: 0, name: '小树苗', size: 48 },
+  { threshold: 2, name: '幼树', size: 62 },
+  { threshold: 4, name: '茂盛树', size: 77 },
+  { threshold: 6, name: '成熟树', size: 90 },
 ] as const;
 export function growthFor(state: GardenState, projectId: string) {
   const count = state.records.filter(
     (item) => !item.deletedAt && item.type === 'action' && item.projectId === projectId,
   ).length;
-  const stageIndex = growthStages.reduce(
-    (stage, item, index) => (count >= item.threshold ? index : stage),
-    0,
-  );
-  return { count, stageIndex, ...growthStages[stageIndex]! };
+  const harvestCount = new Set(
+    state.results
+      .filter((item) => item.projectId === projectId && item.harvestedAt)
+      .map((item) => item.goalId),
+  ).size;
+  const threshold = state.projects.find((item) => item.id === projectId)?.treeStageThreshold ?? 2;
+  const stageIndex = Math.min(3, Math.floor(harvestCount / threshold));
+  return { ...growthStages[stageIndex]!, count, harvestCount, threshold, stageIndex };
+}
+export function fruitStage(percent: number) {
+  return percent >= 100 ? 4 : percent > 60 ? 3 : percent > 30 ? 2 : percent > 0 ? 1 : 0;
 }
 export function goalPercent(goal: Goal | undefined) {
   return goal ? Math.min(100, (goal.currentValue / goal.target) * 100) : 0;

@@ -90,10 +90,10 @@ export function applyCommand(
   };
   const createGoal = (projectId: string, input: GoalInput, replace = false) => {
     const project = projectFor(projectId, true);
+    if (state.goals.length >= 2000) fail('目标数量已达到上限');
     const current = state.goals.find((item) => item.id === project.currentGoalId);
     if (current && !current.completedAt && !current.archivedAt) {
-      if (!replace) fail('项目已有当前目标，替换前需要确认', 'GOAL_EXISTS', 409);
-      current.archivedAt = now;
+      if (replace) current.archivedAt = now;
     }
     const target = input.type === 'manual' ? 1 : input.type === 'percentage' ? 100 : input.target;
     if (input.type === 'count' && !Number.isInteger(target)) fail('数量目标请填写整数');
@@ -110,7 +110,8 @@ export function applyCommand(
       completedAt: null,
       archivedAt: null,
     });
-    project.currentGoalId = goalId;
+    if (!current || current.completedAt || current.archivedAt || replace)
+      project.currentGoalId = goalId;
   };
   const contribution = (record: Entry, reverse = false) => {
     if (!record.contribution || !record.goalId) return;
@@ -125,10 +126,22 @@ export function applyCommand(
   const makeRecord = (draft: ManualDraft, sourceTaskId: string | null = null): Entry => {
     if (draft.date > today) fail('已发生的记录不能填写未来日期');
     const project = draft.projectId ? projectFor(draft.projectId, true) : null;
-    let goalId: string | null = null;
+    let goalId: string | null = draft.goalId ?? null;
+    if (goalId) {
+      const linked = state.goals.find((item) => item.id === goalId);
+      if (
+        draft.type !== 'action' ||
+        !project ||
+        !linked ||
+        linked.projectId !== project.id ||
+        linked.archivedAt ||
+        linked.completedAt
+      )
+        fail('请选择这个项目的进行中目标');
+    }
     if (draft.contribution) {
       if (draft.type !== 'action' || !project) fail('只有关联项目的行动可以推进目标');
-      const goal = state.goals.find((item) => item.id === project.currentGoalId);
+      const goal = state.goals.find((item) => item.id === (goalId ?? project.currentGoalId));
       if (!goal || goal.completedAt || goal.archivedAt || goal.type === 'manual')
         fail('当前目标不支持数量贡献');
       if (goal.type === 'count' && !Number.isInteger(draft.contribution))
@@ -202,6 +215,22 @@ export function applyCommand(
     case 'project.status':
       projectFor(command.id).status = command.status;
       break;
+    case 'project.threshold':
+      projectFor(command.id).treeStageThreshold = command.threshold;
+      break;
+    case 'goal.primary': {
+      const project = projectFor(command.projectId, true);
+      const goal = state.goals.find(
+        (item) =>
+          item.id === command.goalId &&
+          item.projectId === project.id &&
+          !item.archivedAt &&
+          !item.completedAt,
+      );
+      if (!goal) fail('请选择进行中的目标');
+      project.currentGoalId = goal.id;
+      break;
+    }
     case 'goal.create':
       createGoal(command.projectId, command.goal, command.replace);
       break;
@@ -209,7 +238,6 @@ export function applyCommand(
       const goal = state.goals.find((item) => item.id === command.id);
       if (!goal) fail('目标不存在', 'NOT_FOUND', 404);
       projectFor(goal.projectId, true);
-      if (command.value > goal.target) fail('进度不能超过目标值');
       if (goal.type === 'count' && !Number.isInteger(command.value)) fail('数量进度请填写整数');
       setProgress(command.id, command.value);
       break;
@@ -475,13 +503,14 @@ export function applyCommand(
       title: goal.title,
       completedAt: now,
       harvestedAt: null,
-      actionCount: records.filter((item) => item.type === 'action').length,
+      actionCount: records.filter((item) => item.type === 'action' && item.goalId === goal.id)
+        .length,
       ideaCount: records.filter((item) => item.type === 'idea').length,
       days: Math.max(
         1,
         Math.floor(
           (Date.parse(`${today}T00:00:00Z`) -
-            Date.parse(`${dateInZone(project.createdAt, state.timeZone)}T00:00:00Z`)) /
+            Date.parse(`${dateInZone(goal.createdAt, state.timeZone)}T00:00:00Z`)) /
             86400000,
         ) + 1,
       ),
@@ -518,6 +547,15 @@ export function applyCommand(
       result.harvestedAt = now;
       result.followUp = 'continue';
     }
+  for (const project of state.projects) {
+    const current = state.goals.find((goal) => goal.id === project.currentGoalId);
+    if (current?.completedAt || current?.archivedAt) {
+      const next = state.goals.find(
+        (goal) => goal.projectId === project.id && !goal.completedAt && !goal.archivedAt,
+      );
+      if (next) project.currentGoalId = next.id;
+    }
+  }
   const feedback = {
     growthProjectIds: [...affected],
     resultIds: state.results.filter((item) => !oldResultIds.has(item.id)).map((item) => item.id),

@@ -77,7 +77,13 @@ describe('文档 V0.2 REST 联调', () => {
     expect((await read(cookie, '/projects?status=all')).json().data.items).toHaveLength(1);
     const detail = (await read(cookie, `/projects/${project.id}`)).json().data.project;
     expect(detail.goal).toBeNull();
-    expect(detail.growth).toEqual({ action_count: 0, stage: 0, stage_key: 'stage_0' });
+    expect(detail.growth).toEqual({
+      action_count: 0,
+      harvest_count: 0,
+      tree_stage_threshold: 2,
+      stage: 0,
+      stage_key: 'stage_0',
+    });
   });
   it('写入需要幂等头，同 key 返回原始结果，修改正文会冲突', async () => {
     const { cookie, project } = await setup();
@@ -181,7 +187,7 @@ describe('文档 V0.2 REST 联调', () => {
       (await read(cookie, `/projects/${project.id}`)).json().data.project.growth.action_count,
     ).toBe(0);
   });
-  it('目标模式、活跃目标冲突、完成成果唯一，收获不修改项目状态和目标', async () => {
+  it('目标模式、多目标独立进度、完成成果唯一，收获不修改项目状态', async () => {
     for (const mode of ['count', 'percent', 'manual']) {
       const { cookie, project } = await setup(mode);
       const goal = (
@@ -197,8 +203,9 @@ describe('文档 V0.2 REST 联调', () => {
         title: '不覆盖',
         mode: 'manual',
       });
-      expect(duplicate.statusCode).toBe(409);
-      expect(duplicate.json().code).toBe('ACTIVE_GOAL_EXISTS');
+      expect(duplicate.statusCode).toBe(200);
+      const secondGoal = duplicate.json().data.goal;
+      expect(secondGoal.id).not.toBe(goal.id);
       const done = await write(
         cookie,
         `/goals/${goal.id}/progress`,
@@ -212,7 +219,10 @@ describe('文档 V0.2 REST 联调', () => {
       await write(cookie, `/results/${result.id}/harvest`);
       const after = (await read(cookie, `/projects/${project.id}`)).json().data.project;
       expect(after.status).toBe('active');
-      expect(after.goal.id).toBe(goal.id);
+      expect(after.goal.id).toBe(secondGoal.id);
+      expect(after.goals).toHaveLength(2);
+      expect(after.growth.harvest_count).toBe(1);
+      expect(after.growth.stage).toBe(0);
       const next = await write(cookie, `/projects/${project.id}/goals`, {
         title: '下个目标',
         mode: 'manual',
@@ -285,5 +295,74 @@ describe('文档 V0.2 REST 联调', () => {
     expect((await read(cookie, `/projects/${project.id}`)).json().data.project.status).toBe(
       'active',
     );
+  });
+});
+
+describe('PRD V1.1 REST 目标贡献与手动收获', () => {
+  it('贡献需确认且只能归属同项目目标；重试不重复进度，成熟后并发收获只计一次', async () => {
+    const { cookie, project } = await setup('发布');
+    const goal = (
+      await write(cookie, `/projects/${project.id}/goals`, {
+        title: '发布2条视频',
+        mode: 'count',
+        target_value: 2,
+        unit: '条',
+      })
+    ).json().data.goal;
+    const untouched = await write(cookie, '/record-batches/commit', {
+      items: [{ ...item(project.id), content: '剪完视频', goal_id: goal.id }],
+    });
+    expect(untouched.statusCode).toBe(200);
+    expect(
+      (await read(cookie, `/projects/${project.id}`)).json().data.project.goal.current_value,
+    ).toBe(0);
+    const contribution = {
+      ...item(project.id),
+      content: '发布2条视频',
+      goal_id: goal.id,
+      contribution: 2,
+    };
+    expect(
+      (await write(cookie, '/record-batches/commit', { items: [contribution] })).statusCode,
+    ).toBe(422);
+    const secondProject = (
+      await write(cookie, '/projects/batch', {
+        projects: [{ client_item_id: 'other', name: '读书' }],
+      })
+    ).json().data.projects[0];
+    expect(
+      (
+        await write(cookie, '/record-batches/commit', {
+          items: [{ ...contribution, project_id: secondProject.id, progress_confirmed: true }],
+        })
+      ).statusCode,
+    ).toBe(400);
+    const key = randomUUID();
+    const payload = { items: [{ ...contribution, progress_confirmed: true }] };
+    const response = await write(cookie, '/record-batches/commit', payload, 'POST', key);
+    expect(response.statusCode).toBe(200);
+    expect(
+      (await write(cookie, '/record-batches/commit', payload, 'POST', key)).json().data,
+    ).toEqual(response.json().data);
+    const result = response.json().data.completed_results[0];
+    expect(result.action_count).toBe(2);
+    expect(result.harvested_at).toBeNull();
+    const before = (await read(cookie, `/projects/${project.id}`)).json().data.project;
+    expect(before.growth).toMatchObject({ harvest_count: 0, stage: 0 });
+    const picks = await Promise.all([
+      write(cookie, `/results/${result.id}/harvest`),
+      write(cookie, `/results/${result.id}/harvest`),
+    ]);
+    expect(picks.every((pick) => pick.statusCode === 200)).toBe(true);
+    await write(cookie, `/projects/${project.id}`, { tree_stage_threshold: 1 }, 'PATCH');
+    const after = (await read(cookie, `/projects/${project.id}`)).json().data.project;
+    expect(after.growth).toMatchObject({ harvest_count: 1, stage: 1, tree_stage_threshold: 1 });
+    expect(
+      (await read(cookie, '/records'))
+        .json()
+        .data.items.filter((entry: { goal_id: string }) => entry.goal_id === goal.id),
+    ).toHaveLength(2);
+    const persisted = (await read(cookie, '/exports/garden')).json().data;
+    expect(persisted.results).toHaveLength(1);
   });
 });

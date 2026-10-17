@@ -58,7 +58,7 @@ export function SeedPage() {
         <AmbientScene indoor />
         <PageHeading title="种下一个方向" back={hasStarted ? '/projects' : '/welcome'} />
         <div className="speech-bubble seed-bubble">
-          hi！我是你的小苹果
+          hi！我是苹什猫
           <br />
           告诉我，你现在想做什么？
           <br />

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { randomUUID } from 'node:crypto';
-import { applyCommand, emptyGarden, growthFor, createReport } from '../src/index.js';
+import { applyCommand, emptyGarden, growthFor, createReport, fruitStage } from '../src/index.js';
 import type { GardenState, Command, ManualDraft } from '@apple/contracts';
 const now = '2026-10-13T05:00:00.000Z';
 const runtime = { now, id: randomUUID };
@@ -182,5 +182,81 @@ describe('手动业务规则', () => {
     expect(() =>
       run(state, { type: 'records.save', items: [draft(projectId, { date: '2026-10-14' })] }),
     ).toThrow('未来日期');
+  });
+});
+
+describe('PRD V1.1 目标、果实与树独立成长', () => {
+  it('果实五档边界只由目标进度决定', () => {
+    expect([0, 0.1, 30, 30.1, 60, 60.1, 99.9, 100].map(fruitStage)).toEqual([
+      0, 1, 1, 2, 2, 3, 3, 4,
+    ]);
+  });
+  it('大量普通行动不会成熟苹果或升级；重复摘果只记一次，各树独立', () => {
+    const { state: initial, projectId, goalId } = setup('manual');
+    let state = run(initial, {
+      type: 'records.save',
+      items: Array.from({ length: 30 }, () => draft(projectId)),
+    }).state;
+    state = run(state, {
+      type: 'project.create',
+      name: '另一棵树',
+      icon: 'book',
+      color: 'blue',
+      goal: null,
+    }).state;
+    const other = state.projects[1]!.id;
+    expect(growthFor(state, projectId).stageIndex).toBe(0);
+    expect(state.results).toHaveLength(0);
+    for (let index = 0; index < 8; index++) {
+      let id = goalId;
+      if (index > 0) {
+        state = run(state, {
+          type: 'goal.create',
+          projectId,
+          replace: false,
+          goal: { title: `第${index}个目标`, type: 'manual', target: 1, unit: '' },
+        }).state;
+        id = state.goals.at(-1)!.id;
+      }
+      state = run(state, { type: 'goal.progress', id, value: 1 }).state;
+      expect(growthFor(state, projectId).harvestCount).toBe(index);
+      const result = state.results.at(-1)!;
+      state = run(state, { type: 'result.harvest', id: result.id, followUp: 'continue' }).state;
+      state = run(state, { type: 'result.harvest', id: result.id, followUp: 'continue' }).state;
+      expect(growthFor(state, projectId).harvestCount).toBe(index + 1);
+      expect(growthFor(state, projectId).stageIndex).toBe(Math.min(3, Math.floor((index + 1) / 2)));
+      expect(growthFor(state, other).stageIndex).toBe(0);
+    }
+    const restored = JSON.parse(JSON.stringify(state)) as GardenState;
+    expect(growthFor(restored, projectId)).toEqual(growthFor(state, projectId));
+    state = run(state, { type: 'project.threshold', id: projectId, threshold: 1 }).state;
+    expect(growthFor(state, projectId).threshold).toBe(1);
+    expect(growthFor(state, other).threshold).toBe(2);
+  });
+  it('选择具体目标，关联行动可零贡献，目标切换不串进度，超过目标上限会截断', () => {
+    const { state: initial, projectId, goalId } = setup();
+    let state = run(initial, {
+      type: 'goal.create',
+      projectId,
+      replace: false,
+      goal: { title: '另一个目标', type: 'percentage', target: 100, unit: '%' },
+    }).state;
+    const secondId = state.goals.at(-1)!.id;
+    expect(state.projects[0]!.currentGoalId).toBe(goalId);
+    state = run(state, {
+      type: 'records.save',
+      items: [draft(projectId, { content: '剪完视频', goalId })],
+    }).state;
+    expect(state.goals[0]!.currentValue).toBe(0);
+    state = run(state, { type: 'goal.primary', projectId, goalId: secondId }).state;
+    state = run(state, {
+      type: 'records.save',
+      items: [draft(projectId, { goalId, contribution: 20 })],
+    }).state;
+    expect(state.goals[0]!.currentValue).toBe(2);
+    expect(state.goals[1]!.currentValue).toBe(0);
+    expect(state.results[0]!.actionCount).toBe(2);
+    expect(state.results[0]!.harvestedAt).toBeNull();
+    expect(growthFor(state, projectId).stageIndex).toBe(0);
   });
 });

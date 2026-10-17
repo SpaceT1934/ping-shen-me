@@ -26,7 +26,7 @@ export function registerGoalRoutes(app: FastifyInstance, { service, sessions }: 
           },
         });
         const project = projectFor(state, id);
-        const goal = state.goals.find((item) => item.id === project.currentGoalId)!;
+        const goal = state.goals.at(-1)!;
         return { goal: goalDto(goal), project: projectDto(state, project) };
       },
     );

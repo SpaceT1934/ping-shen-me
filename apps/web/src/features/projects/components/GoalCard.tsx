@@ -1,94 +1,125 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import type { Goal } from '@apple/contracts';
+import { goalPercent } from '@apple/domain';
 import { useGarden } from '../../../app/garden-context';
-import { PixelIcon } from '../../../components/PixelIcon';
+import { GoalFruit } from '../../../components/GardenVisuals';
 import { GoalFields, defaultGoal } from './GoalFields';
 import type { ProjectView } from '../../../lib/garden/view-model';
+function GoalItem({ goal, project }: { goal: Goal; project: ProjectView }) {
+  const { busy, updateProgress, results, setPrimaryGoal } = useGarden();
+  const [value, setValue] = useState(goal.currentValue);
+  const navigate = useNavigate();
+  const result = results.find((item) => item.goalId === goal.id);
+  const percent = goalPercent(goal);
+  return (
+    <article className="goal-card target-goal">
+      <GoalFruit percent={percent} size={58} />
+      <p className="section-kicker">
+        {project.goalId === goal.id ? '主要目标' : '阶段目标'}
+        {result?.harvestedAt ? ' · 已收入果篮' : goal.completedAt ? ' · 已成熟' : ''}
+      </p>
+      <h2>{goal.title}</h2>
+      <div className="progress-line">
+        <div className="progress-track">
+          <span style={{ width: `${percent}%` }} />
+        </div>
+        <strong>
+          {goal.type === 'manual'
+            ? goal.completedAt
+              ? '已达成'
+              : '待确认达成'
+            : `${goal.currentValue}/${goal.target}${goal.unit}`}
+        </strong>
+      </div>
+      {goal.completedAt
+        ? result && (
+            <Link to={`/fruit?result=${result.id}`} className="pending-fruit">
+              {result.harvestedAt ? '查看这颗果实' : '摘下这颗果实'} →
+            </Link>
+          )
+        : project.status === 'active' && (
+            <>
+              {project.goalId !== goal.id && (
+                <button
+                  className="text-button"
+                  disabled={busy}
+                  onClick={() => void setPrimaryGoal(project.id, goal.id)}
+                >
+                  设为主要目标
+                </button>
+              )}
+              <details className="goal-edit">
+                <summary>更新目标进度</summary>
+                <form
+                  onSubmit={async (event) => {
+                    event.preventDefault();
+                    const feedback = await updateProgress(
+                      goal.id,
+                      goal.type === 'manual' ? 1 : value,
+                    );
+                    if (feedback?.resultIds[0]) navigate(`/fruit?result=${feedback.resultIds[0]}`);
+                  }}
+                >
+                  {goal.type !== 'manual' && (
+                    <label>
+                      {goal.type === 'percentage' ? '当前百分比' : '已完成数量'}
+                      <input
+                        aria-label={`已完成数量：${goal.title}`}
+                        type="number"
+                        min="0"
+                        max={goal.target}
+                        step={goal.type === 'count' ? 1 : 0.1}
+                        value={value}
+                        onChange={(event) => setValue(Number(event.target.value))}
+                        required
+                      />
+                    </label>
+                  )}
+                  <button className="mini-button" disabled={busy}>
+                    {goal.type === 'manual' ? '确认目标已经达成' : '确认并保存进度'}
+                  </button>
+                </form>
+              </details>
+            </>
+          )}
+    </article>
+  );
+}
 export function GoalCard({ project }: { project: ProjectView }) {
-  const { busy, updateProgress, createGoal, results } = useGarden();
-  const [value, setValue] = useState(project.progress);
+  const { busy, createGoal } = useGarden();
   const [params, setParams] = useSearchParams();
   const [editing, setEditing] = useState(() => params.get('newGoal') === '1');
   const [nextGoal, setNextGoal] = useState(defaultGoal);
-  const navigate = useNavigate();
-  const result = results.find((item) => item.goalId === project.goalId);
+  const active = project.goals.filter((goal) => !goal.completedAt);
+  const ripe = project.goals.filter((goal) => goal.completedAt);
   return (
-    <section className="goal-card">
-      <PixelIcon name={result ? 'golden' : 'green'} size={60} className="goal-apple" />
-      <p className="section-kicker">当前目标</p>
-      <h2>{project.goal}</h2>
-      {project.goalId && (
-        <>
-          <div className="progress-line">
-            <div className="progress-track">
-              <span style={{ width: `${project.percent}%` }} />
-            </div>
-            <strong>
-              {project.goalType === 'manual'
-                ? project.goalCompleted
-                  ? '已达成'
-                  : '进行中'
-                : `${project.progress}/${project.target}${project.unit}`}
-            </strong>
-          </div>
-          {project.goalCompleted
-            ? result && (
-                <Link to={`/fruit?result=${result.id}`} className="pending-fruit">
-                  {result.harvestedAt ? '查看这颗果实' : '目标达成，收获果实'} →
-                </Link>
-              )
-            : project.status === 'active' && (
-                <details className="goal-edit">
-                  <summary>更新目标进度</summary>
-                  <form
-                    onSubmit={async (event) => {
-                      event.preventDefault();
-                      const feedback = await updateProgress(
-                        project.goalId!,
-                        project.goalType === 'manual' ? 1 : value,
-                      );
-                      if (feedback?.resultIds[0])
-                        navigate(`/fruit?result=${feedback.resultIds[0]}`);
-                    }}
-                  >
-                    {project.goalType !== 'manual' && (
-                      <label>
-                        {project.goalType === 'percentage' ? '当前百分比' : '已完成数量'}
-                        <input
-                          aria-label="已完成数量"
-                          type="number"
-                          min="0"
-                          max={project.target}
-                          step={project.goalType === 'count' ? '1' : '0.1'}
-                          value={value}
-                          onChange={(event) => setValue(Number(event.target.value))}
-                          required
-                        />
-                      </label>
-                    )}
-                    <button className="mini-button" disabled={busy}>
-                      {project.goalType === 'manual' ? '确认目标已经达成' : '保存进度'}
-                    </button>
-                  </form>
-                </details>
-              )}
-        </>
+    <section className="project-goals">
+      <div className="goal-section-title">
+        <h2>这棵树的目标</h2>
+        <small>一个目标，一颗苹果</small>
+      </div>
+      {active.map((goal) => (
+        <GoalItem key={`${goal.id}-${goal.currentValue}`} goal={goal} project={project} />
+      ))}
+      {!active.length && (
+        <p className="small-print">
+          {ripe.length
+            ? '这一阶段已经完成，可以再种下一颗目标果实。'
+            : '给这个方向设一个小目标，让努力有处安放。'}
+        </p>
       )}
-      {project.status === 'active' && (!project.goalId || project.goalCompleted) && (
+      {project.status === 'active' && (
         <>
-          <button className="text-button" onClick={() => setEditing(!editing)}>
-            {editing
-              ? '取消'
-              : project.goalId && !project.goalCompleted
-                ? '替换当前目标'
-                : '设置新目标'}
+          <button className="outline-button full-width" onClick={() => setEditing(!editing)}>
+            {editing ? '取消添加' : '＋ 添加一个阶段目标'}
           </button>
           {editing && (
             <form
               className="goal-create-form"
               onSubmit={async (event) => {
                 event.preventDefault();
-                if (await createGoal(project.id, nextGoal, Boolean(project.goalId))) {
+                if (await createGoal(project.id, nextGoal, false)) {
                   setParams({}, { replace: true });
                   setEditing(false);
                   setNextGoal(defaultGoal);
@@ -96,16 +127,20 @@ export function GoalCard({ project }: { project: ProjectView }) {
               }}
             >
               <GoalFields value={nextGoal} onChange={setNextGoal} />
-
-              <button
-                className="outline-button full-width"
-                disabled={busy || !nextGoal.title.trim()}
-              >
-                保存目标
+              <button className="dark-button full-width" disabled={busy || !nextGoal.title.trim()}>
+                种下目标苹果
               </button>
             </form>
           )}
         </>
+      )}
+      {ripe.length > 0 && (
+        <details className="completed-goals">
+          <summary>已达成的目标 · {ripe.length}</summary>
+          {ripe.map((goal) => (
+            <GoalItem key={goal.id} goal={goal} project={project} />
+          ))}
+        </details>
       )}
     </section>
   );

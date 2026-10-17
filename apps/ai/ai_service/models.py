@@ -10,10 +10,18 @@ class Input(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
 
+class GoalContext(Input):
+    id: Id
+    title: Annotated[str, Field(max_length=200)]
+    mode: Literal["count", "percentage", "manual"]
+    unit: Annotated[str, Field(max_length=30)]
+
+
 class ProjectContext(Input):
     id: Id
     name: Annotated[str, Field(min_length=1, max_length=200)]
     goal: Annotated[str, Field(max_length=200)] | None = None
+    goals: Annotated[list[GoalContext], Field(max_length=2000)] = Field(default_factory=list)
 
 
 class ProjectRequest(Input):
@@ -29,6 +37,7 @@ class RecordItem(Input):
     content: Text
     type: Literal["action", "task", "idea", "goal"]
     project_id: Id | None
+    goal_id: Id | None = None
     emotion: Annotated[str, Field(max_length=100)] | None
     source_text: Text
 
@@ -57,3 +66,7 @@ class AudioRequest(Input):
     # 5 MiB 的 base64 上限；不接受 URL，防止抓取任意外部资源。
     audio_base64: Annotated[str, Field(min_length=4, max_length=6990508)]
     mime_type: Literal["audio/wav", "audio/mpeg", "audio/webm", "audio/ogg", "audio/flac"]
+
+
+class FeedbackRequest(Input):
+    actions: Annotated[list[Text], Field(max_length=3)]

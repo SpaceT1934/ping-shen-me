@@ -74,6 +74,10 @@ export function registerProjectRoutes(app: FastifyInstance, { service, sessions 
             icon: body.icon ?? project.icon,
             color: body.color ?? project.color,
           });
+        if (body.current_goal_id)
+          state = run({ type: 'goal.primary', projectId: id, goalId: body.current_goal_id });
+        if (body.tree_stage_threshold)
+          state = run({ type: 'project.threshold', id, threshold: body.tree_stage_threshold });
         if (body.status) state = run({ type: 'project.status', id, status: body.status });
         return { project: projectDto(state, projectFor(state, id)) };
       },

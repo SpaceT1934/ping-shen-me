@@ -199,11 +199,15 @@ export function GardenProvider({ children }: { children: ReactNode }) {
               type: 'goal.progress',
               id,
               value,
-              manual: view.projects.find((item) => item.goalId === id)?.goalType === 'manual',
+              manual: state.goals.find((item) => item.id === id)?.type === 'manual',
             })
           )?.feedback || null,
         createGoal: async (projectId, goal, replace) =>
           (await execute({ type: 'goal.create', projectId, goal, replace }))?.feedback || null,
+        setPrimaryGoal: async (projectId, goalId) =>
+          Boolean(await execute({ type: 'goal.primary', projectId, goalId })),
+        setTreeThreshold: async (id, threshold) =>
+          Boolean(await execute({ type: 'project.threshold', id, threshold })),
         harvestResult: async (id, followUp) =>
           Boolean(await execute({ type: 'result.harvest', id, followUp })),
       }}

@@ -28,6 +28,7 @@ export const recordAnalysisSchema = z.object({
         type: z.enum(['action', 'task', 'idea', 'goal']),
         client_item_id: z.string().min(1).max(100),
         project_id: z.string().min(1).max(100).nullable(),
+        goal_id: z.string().min(1).max(100).nullable().default(null),
         emotion: z.string().max(100).nullable(),
         source_text: z.string().min(1).max(2000),
       }),
@@ -44,3 +45,5 @@ export const transcriptionInputSchema = z.object({
 });
 export const transcriptionSchema = z.object({ text: z.string().trim().min(1).max(2000) });
 export type ProjectCandidate = { name: string; goalText: string | null; sourceText: string };
+
+export const actionFeedbackSchema = z.object({ text: z.string().trim().min(1).max(60) });

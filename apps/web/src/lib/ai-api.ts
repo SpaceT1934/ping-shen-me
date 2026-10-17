@@ -4,6 +4,7 @@ import {
   recordAnalysisSchema,
   reportSummarySchema,
   transcriptionSchema,
+  actionFeedbackSchema,
 } from '@apple/contracts';
 import { apiRequest } from './api';
 export const aiApi = {
@@ -39,6 +40,7 @@ export const aiApi = {
         content: item.content,
         type: item.type,
         projectId: item.project_id,
+        goalId: item.goal_id,
         sourceText: item.source_text,
         emotion: item.emotion,
         source,
@@ -52,6 +54,8 @@ export const aiApi = {
       { method: 'POST', body: JSON.stringify({ period }) },
       40_000,
     ),
+  feedback: () =>
+    apiRequest('/ai/feedback', actionFeedbackSchema, { method: 'POST', body: '{}' }, 40_000),
   transcribe: (audioBase64: string, mimeType: string) =>
     apiRequest(
       '/asr/transcribe',

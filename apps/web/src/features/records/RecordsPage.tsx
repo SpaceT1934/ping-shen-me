@@ -41,6 +41,7 @@ function restoreDraft(): {
 const blankDraft = (content = ''): Draft => ({
   key: createUuid(),
   selected: true,
+  goalId: null,
   content,
   projectId: null,
   type: 'action',
@@ -52,7 +53,7 @@ const blankDraft = (content = ''): Draft => ({
   unit: '',
 });
 export function RecordsPage() {
-  const { projects, saveEntries, busy } = useGarden();
+  const { projects, state, saveEntries, busy } = useGarden();
   const [savedDraft] = useState(restoreDraft);
   const [text, setText] = useState(savedDraft.text);
   const [inputSource, setInputSource] = useState<'text' | 'voice'>(savedDraft.source);
@@ -84,7 +85,20 @@ export function RecordsPage() {
     selected.every(
       (item) =>
         item.content.trim() &&
-        (item.type !== 'task' || (item.projectId && item.content.length <= 200)),
+        (item.type !== 'task' || (item.projectId && item.content.length <= 200)) &&
+        Number.isFinite(item.contribution) &&
+        item.contribution >= 0 &&
+        (item.contribution === 0 ||
+          Boolean(
+            item.goalId &&
+            state.goals.some(
+              (goal) =>
+                goal.id === item.goalId &&
+                goal.projectId === item.projectId &&
+                !goal.completedAt &&
+                (goal.type !== 'count' || Number.isInteger(item.contribution)),
+            ),
+          )),
     );
   const save = async () => {
     if (!valid) return;
@@ -95,6 +109,7 @@ export function RecordsPage() {
         type: item.type,
         date: item.date,
         dueDate: item.dueDate,
+        goalId: item.type === 'action' ? item.goalId : null,
         contribution: item.contribution,
         goalType: item.goalType,
         target: item.target,
@@ -139,6 +154,10 @@ export function RecordsPage() {
         <div className="draft-list">
           {drafts.map((item) => {
             const project = projects.find((project) => project.id === item.projectId);
+            const goals = state.goals.filter(
+              (goal) => goal.projectId === item.projectId && !goal.completedAt && !goal.archivedAt,
+            );
+            const goal = goals.find((goal) => goal.id === item.goalId);
             return (
               <article className={`draft-card ${project?.color || 'peach'}`} key={item.key}>
                 {item.sourceText && (
@@ -154,7 +173,11 @@ export function RecordsPage() {
                       aria-label="关联项目"
                       value={item.projectId || ''}
                       onChange={(event) =>
-                        update(item.key, { projectId: event.target.value || null, contribution: 0 })
+                        update(item.key, {
+                          projectId: event.target.value || null,
+                          goalId: null,
+                          contribution: 0,
+                        })
                       }
                     >
                       <option value="">未归类</option>
@@ -172,6 +195,7 @@ export function RecordsPage() {
                       onChange={(event) =>
                         update(item.key, {
                           type: event.target.value as Draft['type'],
+                          goalId: null,
                           contribution: 0,
                         })
                       }
@@ -214,6 +238,55 @@ export function RecordsPage() {
                       }
                     />
                   </label>
+                  {item.type === 'action' && item.projectId && (
+                    <div className="contribution-editor">
+                      <label>
+                        关联目标（可选）
+                        <select
+                          aria-label="关联目标"
+                          value={item.goalId || ''}
+                          onChange={(event) =>
+                            update(item.key, {
+                              goalId: event.target.value || null,
+                              contribution: 0,
+                            })
+                          }
+                        >
+                          <option value="">仅记录行动，不推进目标</option>
+                          {goals.map((goal) => (
+                            <option key={goal.id} value={goal.id}>
+                              {goal.title}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      {goal && goal.type !== 'manual' && (
+                        <label>
+                          确认本次实际完成
+                          {goal.type === 'percentage'
+                            ? '的百分点'
+                            : `的数量（${goal.unit || '个'}）`}
+                          <input
+                            aria-label="本次目标贡献"
+                            type="number"
+                            min="0"
+                            max={goal.target}
+                            step={goal.type === 'count' ? 1 : 0.1}
+                            value={item.contribution}
+                            required
+                            onChange={(event) =>
+                              update(item.key, { contribution: Number(event.target.value) })
+                            }
+                          />
+                        </label>
+                      )}
+                      <p className="small-print">
+                        {goal?.type === 'manual'
+                          ? '手动目标请在目标详情确认达成；这条行动只作关联记录。'
+                          : '默认不增加进度。只有实际符合目标指标时才填写；剪完视频不等于发布视频。'}
+                      </p>
+                    </div>
+                  )}
                   {item.type === 'goal' && (
                     <p className="small-print">
                       保存为目标建议，不会替换当前目标。设置目标请到项目详情。

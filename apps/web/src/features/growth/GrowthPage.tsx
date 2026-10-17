@@ -1,15 +1,18 @@
+import { useActionFeedback } from '../../lib/garden/use-action-feedback';
 import { useState } from 'react';
-import { Link, useLocation, useSearchParams, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { useGarden } from '../../app/garden-context';
 import type { Feedback } from '@apple/contracts';
-import { LineIcon, PixelIcon } from '../../components/PixelIcon';
+import { LineIcon } from '../../components/PixelIcon';
 import { AmbientScene, LivingMascot } from '../../components/AmbientScene';
+import { GoalFruit } from '../../components/GardenVisuals';
 export function GrowthPage() {
-  const { projects } = useGarden();
+  const { projects, state } = useGarden();
   const location = useLocation();
   const feedback = (location.state as { feedback?: Feedback } | null)?.feedback;
   const grown = projects.filter((item) => feedback?.growthProjectIds.includes(item.id));
   const fruitId = feedback?.resultIds[0];
+  const encouragement = useActionFeedback(state.version, grown.length > 0);
   return (
     <div className="growth-scene">
       <AmbientScene />
@@ -21,7 +24,7 @@ export function GrowthPage() {
         <p>
           {grown.length ? (
             <>
-              这次努力，已经记下来了。
+              {encouragement.data?.text || '这次努力，已经记下来了。'}
               <br />
               {grown.map((item) => (
                 <span className="growth-summary-row" key={item.id}>
@@ -42,14 +45,16 @@ export function GrowthPage() {
       <div className="growth-spark spark-two">✧</div>
       {grown.length > 0 && <div className="watering-drop" aria-hidden="true" />}
       <div className="growth-apple">
-        <PixelIcon name={fruitId ? 'golden' : 'green'} size={155} />
+        <GoalFruit percent={fruitId ? 100 : (grown[0]?.percent ?? 0)} size={155} />
       </div>
       <div className="growth-mascot">
         <LivingMascot size={122} />
       </div>
       <div className="scene-bottom">
         <p className="scene-note">
-          {grown.length ? '每条已保存的行动，为方向积累一次成长。' : '准备好了，就从一件小事开始。'}
+          {grown.length
+            ? '行动已浇水；只有确认的目标贡献会让苹果成熟。'
+            : '准备好了，就从一件小事开始。'}
         </p>
         <Link to={fruitId ? `/fruit?result=${fruitId}` : '/'} className="dark-button full-width">
           {fruitId ? '有果实成熟了，去收获' : '太好了，回到我的树'}
@@ -62,14 +67,14 @@ export function GrowthPage() {
 export function FruitPage() {
   const [params] = useSearchParams();
   const { projects, results, harvestResult, busy } = useGarden();
+  const [caught, setCaught] = useState(false);
   const [followUp, setFollowUp] = useState<'continue' | 'complete' | 'next_goal'>('continue');
-  const navigate = useNavigate();
   const result =
     results.find((item) => item.id === params.get('result')) ||
     results.find((item) => item.projectId === params.get('project'));
   const project = projects.find((item) => item.id === result?.projectId);
   return (
-    <div className="fruit-scene">
+    <div className={`fruit-scene ${caught ? 'just-harvested' : ''}`}>
       <AmbientScene />
       <Link
         className="scene-close"
@@ -78,9 +83,17 @@ export function FruitPage() {
       >
         <LineIcon name="close" />
       </Link>
-      <div className="fruit-ribbon">{result ? '一颗属于你的果实！' : '果实正在慢慢生长'}</div>
+      <div className="fruit-ribbon">
+        {caught
+          ? '苹什猫接住啦！'
+          : result?.harvestedAt
+            ? '一颗属于你的收获！'
+            : result
+              ? '红果成熟，等你摘下'
+              : '果实正在慢慢生长'}
+      </div>
       <div className="fruit-display">
-        <PixelIcon name={result ? 'golden' : 'green'} size={230} />
+        <GoalFruit percent={result ? 100 : 0} size={230} />
         {result && <span className="fruit-glint">✦</span>}
       </div>
       <div className="fruit-companion">
@@ -92,7 +105,7 @@ export function FruitPage() {
         {result && (
           <>
             <div className="fruit-stat">
-              <span>从项目开始</span>
+              <span>从目标开始</span>
               <strong>{result.days} 天</strong>
               <span>相关行动</span>
               <strong>{result.actionCount} 次</strong>
@@ -115,10 +128,22 @@ export function FruitPage() {
             )}
           </>
         )}
+        {caught && project && (
+          <div className="harvest-success" role="status">
+            已放入「{project.name}」的果篮，共 {project.growth.harvestCount} 颗。
+            <br />
+            小树现在是{project.growth.name}。
+            {project.growth.stageIndex < 3 &&
+              `再收获 ${project.growth.threshold - (project.growth.harvestCount % project.growth.threshold)} 颗，就能长大一阶段。`}
+          </div>
+        )}
         {result && project ? (
           result.harvestedAt ? (
-            <Link className="dark-button full-width" to={`/projects/${project.id}`}>
-              查看历史成果
+            <Link
+              className="dark-button full-width"
+              to={`/projects/${project.id}?${caught && followUp === 'next_goal' ? 'newGoal=1' : 'tab=basket'}`}
+            >
+              {caught && followUp === 'next_goal' ? '设置下一个目标' : '看看我的果篮'}
               <LineIcon name="arrow" size={18} />
             </Link>
           ) : (
@@ -126,13 +151,10 @@ export function FruitPage() {
               className="dark-button full-width"
               disabled={busy}
               onClick={async () => {
-                if (await harvestResult(result.id, followUp))
-                  navigate(
-                    `/projects/${project.id}${followUp === 'next_goal' ? '?newGoal=1' : ''}`,
-                  );
+                if (await harvestResult(result.id, followUp)) setCaught(true);
               }}
             >
-              {busy ? '正在收获…' : '收下这颗果实'}
+              {busy ? '正在收获…' : '摘下这颗果实'}
               <LineIcon name="arrow" size={18} />
             </button>
           )

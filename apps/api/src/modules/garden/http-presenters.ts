@@ -16,6 +16,8 @@ export const growthDto = (state: GardenState, projectId: string) => {
   const growth = growthFor(state, projectId);
   return {
     action_count: growth.count,
+    harvest_count: growth.harvestCount,
+    tree_stage_threshold: growth.threshold,
     stage: growth.stageIndex,
     stage_key: `stage_${growth.stageIndex}`,
   };
@@ -27,6 +29,9 @@ export const projectDto = (state: GardenState, project: Project) => {
     name: project.name,
     status: project.status,
     goal: goal ? goalDto(goal) : null,
+    goals: state.goals
+      .filter((item) => item.projectId === project.id && !item.archivedAt)
+      .map(goalDto),
     growth: growthDto(state, project.id),
     created_at: project.createdAt,
     icon: project.icon,
@@ -54,6 +59,8 @@ export const recordDto = (record: Entry) => ({
   occurred_at: record.occurredAt || `${record.date}T00:00:00+08:00`,
   created_at: record.createdAt,
   source_task_id: record.sourceTaskId,
+  goal_id: record.goalId,
+  contribution: record.contribution,
 });
 export const resultDto = (result: Result) => ({
   id: result.id,

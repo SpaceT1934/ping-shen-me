@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useGarden } from '../../../app/garden-context';
 import type { ProjectView } from '../../../lib/garden/view-model';
 export function ProjectSettings({ project }: { project: ProjectView }) {
-  const { editProject, setProjectStatus, busy } = useGarden();
+  const { editProject, setProjectStatus, setTreeThreshold, busy } = useGarden();
   const [name, setName] = useState(project.name);
   return (
     <details className="project-settings">
@@ -28,6 +28,20 @@ export function ProjectSettings({ project }: { project: ProjectView }) {
           保存名称
         </button>
       </form>
+      <label>
+        小树每升一阶段所需收获数
+        <select
+          aria-label="成长阈值"
+          disabled={busy}
+          value={project.growth.threshold}
+          onChange={(event) =>
+            void setTreeThreshold(project.id, Number(event.target.value) as 1 | 2)
+          }
+        >
+          <option value="2">2 颗（默认）</option>
+          <option value="1">1 颗</option>
+        </select>
+      </label>
       <p className="small-print">归档只隐藏项目，历史记录和报告会保留。</p>
       <div className="form-actions">
         {project.status === 'active' ? (

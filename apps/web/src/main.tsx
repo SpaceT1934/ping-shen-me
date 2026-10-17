@@ -5,6 +5,7 @@ import { RouterProvider } from 'react-router-dom';
 import { router } from './app/router';
 import { GardenProvider } from './app/GardenProvider';
 import './styles/global.css';
+import './styles/journal-fonts.css';
 import './styles/journal.css';
 
 const queryClient = new QueryClient({

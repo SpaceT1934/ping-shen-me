@@ -321,10 +321,13 @@
     "source": "04_操作图标_SVG"
   },
   "font": {
-    "file": "journal-hand.woff2",
     "family": "Ma Shan Zheng",
+    "stylesheet": "src/styles/journal-fonts.css",
+    "directory": "fonts",
     "source": "https://github.com/google/fonts/tree/main/ofl/mashanzheng",
     "license": "FONT-LICENSE.txt",
-    "processing": "Chinese UI and ASCII subset, WOFF2"
+    "processing": "Complete original font, non-overlapping unicode-range WOFF2 subsets; content-hashed filenames",
+    "glyph_count": 7015,
+    "face_count": 46
   }
 }

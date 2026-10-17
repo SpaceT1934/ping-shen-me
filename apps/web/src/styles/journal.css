@@ -1,8 +1,3 @@
-@font-face {
-  font-family: JournalHand;
-  src: url('/assets/journal/journal-hand.woff2') format('woff2');
-  font-display: swap;
-}
 :root {
   --ink: #52331f;
   --paper: #fff9eb;
@@ -10,7 +5,9 @@
   --coral: #fa8474;
   --leaf: #417e5a;
   --border: #d6c6ad;
-  font-family: JournalHand, 'STKaiti', 'KaiTi', 'PingFang SC', serif;
+  --font-journal: JournalHand, 'STKaiti', 'KaiTi', 'PingFang SC', serif;
+  font-family: var(--font-journal);
+  font-weight: 400;
   color: var(--ink);
   background: #f7efe1;
 }
@@ -20,8 +17,20 @@ body {
 button,
 input,
 textarea,
-select {
+select,
+option {
   font-family: inherit;
+  font-weight: 400;
+}
+strong,
+b {
+  font-weight: 400;
+}
+input::placeholder,
+textarea::placeholder {
+  font-family: inherit;
+  font-weight: inherit;
+  font-style: normal;
 }
 button,
 a,
@@ -1344,7 +1353,7 @@ input[type='radio'] {
   font-size: 16px;
 }
 .save-error {
-  font-family: JournalHand, 'STKaiti', serif;
+  font-family: var(--font-journal);
   border-color: #c99a7c;
   background: #fff3e8;
   font-size: 17px;

@@ -12,7 +12,11 @@
 - `apps/web/src/styles/journal.css`：水彩、奶油纸张、手写字体、珊瑚按钮和场景排版。
 - `apps/web/src/lib/garden/activity-chart.ts`：按报告区间和真实行动时间生成图表，不补造统计数据。
 
-字体使用 Google Fonts 的 Ma Shan Zheng，按界面汉字与 ASCII 子集化为 WOFF2，采用 `font-display: swap`；缺字使用系统楷体或中文字体。授权保留在 `FONT-LICENSE.txt`。
+字体使用 Google Fonts 的 Ma Shan Zheng，按原字库完整生成 WOFF2 分片。基础片包含前端、后端、领域规则中的文案及常用符号；其余字形通过 `unicode-range` 按需下载，避免用户输入或 AI 内容因为旧版子集缺字而混入系统字体。所有分片本地托管，文件名带内容指纹，更新后不会误用旧缓存。字库外的罕见字保留系统楷体/中文字体回退。授权保留在 `FONT-LICENSE.txt`。
+
+`apps/web/src/styles/journal-fonts.css` 为生成的字形范围；`journal.css` 的 `--font-journal` 是统一字体入口。标题、正文、按钮、表单、占位文字和统计数字统一使用原生 400 字重，避免只有单一字重的手写字体混用旧版粗体。
+
+重新生成：安装开发用 `fonttools[woff]`，取得 OFL 授权的原始 `MaShanZheng-Regular.ttf` 后运行 `python apps/web/scripts/build-journal-font.py /path/to/MaShanZheng-Regular.ttf`。分组提示保存在 `journal-font-groups.json`，构建验证原字库覆盖和分片范围不重叠；生成后运行 `pnpm exec prettier --write apps/web/src/styles/journal-fonts.css`。生产运行和 CI 不依赖 Python 字体工具。
 
 ## 场景对应
 

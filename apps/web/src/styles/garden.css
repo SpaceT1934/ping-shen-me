@@ -342,15 +342,15 @@
 }
 @keyframes fruit-catch {
   0% {
-    transform: translateY(0) scale(1);
+    transform: translate(-50%, 0) scale(1);
     opacity: 1;
   }
   65% {
-    transform: translate(-35px, 95px) scale(0.45) rotate(-15deg);
+    transform: translate(calc(-50% + 35px), 95px) scale(0.45) rotate(-15deg);
     opacity: 1;
   }
   100% {
-    transform: translate(-35px, 130px) scale(0.25);
+    transform: translate(calc(-50% + 35px), 130px) scale(0.25);
     opacity: 0;
   }
 }
@@ -368,5 +368,12 @@
   .just-harvested .fruit-display,
   .just-harvested .fruit-companion {
     animation: none;
+  }
+}
+
+@media (max-height: 760px) {
+  .fruit-display .goal-fruit {
+    width: 170px !important;
+    height: 227px !important;
   }
 }

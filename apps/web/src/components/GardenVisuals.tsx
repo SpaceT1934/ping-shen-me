@@ -8,7 +8,7 @@ export function GoalFruit({ percent, size = 40 }: { percent: number; size?: numb
   return (
     <span
       className={`goal-fruit maturity-${stage}`}
-      style={{ width: size, height: size }}
+      style={{ width: size, height: (size * 4) / 3 }}
       role="img"
       aria-label={`${labels[stage]}，进度 ${Math.round(percent)}%`}
     >

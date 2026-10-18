@@ -242,7 +242,7 @@ export function SpeechInput({
               ? '正在转成文字…'
               : recording
                 ? `结束录音 · ${seconds}s`
-                : '按住说话 / 点击录音'}
+                : '按住说话'}
         </button>
         {recording && (
           <button
@@ -268,7 +268,7 @@ export function SpeechInput({
                 : enabled
                   ? !window.isSecureContext
                     ? '手机录音需要 HTTPS 地址，当前可以先输入文字。'
-                    : '按住说话，松开转文字；也可以点按开始、再次点击结束。'
+                    : '按住说话，松开转文字。'
                   : '语音服务暂不可用，可以先输入文字。')}
       </p>
     </div>

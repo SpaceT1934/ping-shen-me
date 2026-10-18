@@ -550,5 +550,61 @@
     "source": "d8929a95250bc91d3b8377b03ffb29a5b92f84ae",
     "runtimeWidth": 640,
     "runtimeHeight": 466
+  },
+  "tree-fruitless": {
+    "source": "generated-derivative",
+    "generator": "built-in image_gen",
+    "references": [
+      "tree-large-green"
+    ],
+    "runtimeWidth": 640,
+    "runtimeHeight": 482,
+    "sha256": "6dd69d3f17f670e468d69a266c6f0cf6d650e722fdb514d853e0043ba80b41de",
+    "prompt": "Use case: precise-object-edit. Asset type: fruitless tree base sprite for the existing mobile app. Edit target: attached illustrated apple tree. Remove BOTH apples completely (the two large green/yellow apples and their small stems/leaves), replacing their areas seamlessly with the same green foliage. Keep the tree silhouette, brown trunk and branches, green/yellow textured foliage, dark hand-drawn outlines, slight white sticker edge, composition and proportions unchanged. Tree must have ZERO fruit, ZERO flowers, ZERO other objects. One isolated tree centered, genuinely transparent background including corners. Preserve soft watercolor/gouache storybook style exactly. No text, no shadow rectangle, no scenery. This will be a base layer; goal apples will be independent UI overlays."
+  },
+  "goal-apple-green": {
+    "source": "generated-derivative",
+    "generator": "built-in image_gen",
+    "references": [
+      "fruit-green"
+    ],
+    "runtimeWidth": 160,
+    "runtimeHeight": 160,
+    "sha256": "0be0f022bdf9a710b94e77d50096b626abe511498ec38d7fceea4a48d0edc776",
+    "prompt": "Use case: background-extraction. Edit target: attached green apple icon. Asset: one green apple UI sprite. Reproduce exactly this single green apple, same leaf at top right, same short brown stem, same dark green hand-drawn outline, same rounded silhouette and watercolor green texture and highlight. Remove the cream paper background entirely: genuine transparent alpha around apple, no rectangular background, no outer white sticker border, no shadow. High quality isolated front-view apple, square canvas tightly framing fruit with 6% padding, no text, no other items. Keep original app storybook hand-painted style; this icon will overlay a tree canopy."
+  },
+  "goal-apple-amber": {
+    "source": "generated-derivative",
+    "generator": "built-in image_gen",
+    "references": [
+      "fruit-green"
+    ],
+    "runtimeWidth": 160,
+    "runtimeHeight": 160,
+    "sha256": "98e49932b0e4dfd11bfce18d1b7d346e4fd930561f833a904843b4389ed809ad",
+    "prompt": "Use case: precise-object-edit. Edit target: attached green apple icon. Make one golden YELLOW apple sprite at middle ripeness. Keep EXACT same rounded fruit silhouette, size, front view, highlight placement, small green leaf at top right, short brown stem, watercolor texture, dark hand-drawn outline. Change only fruit flesh from green into warm golden yellow with subtle peach blush. Keep leaf green and stem brown. Genuine transparent background, no cream rectangle, no white sticker border, no shadow. Single isolated apple centered tightly with 6% padding on square canvas. No words, no other objects. This is a crossfade midpoint for the same green/red apple UI icon."
+  },
+  "goal-apple-red": {
+    "source": "generated-derivative",
+    "generator": "built-in image_gen",
+    "references": [
+      "fruit-green",
+      "fruit-red"
+    ],
+    "runtimeWidth": 160,
+    "runtimeHeight": 160,
+    "sha256": "f3995bf2cf56ec6dc28dd1ec49badf9aac61fa9d4fe7ba7543a4aa3288f3f778",
+    "prompt": "Use case: precise-object-edit. Edit target Image 1: green apple icon. Supporting color reference Image 2: ripe red apple. Create one ripe RED apple sprite using the EXACT same silhouette, size, front view, leaf at top right, short brown stem, highlight positions as Image 1; only change the fruit flesh from green to warm coral red as Image 2 and dark outline to reddish brown. Preserve watercolor texture and hand-painted outline. Keep leaf green and stem brown. Genuine transparent background, no rectangular paper, no white sticker edge, no shadow. Square canvas tightly framed with 6% padding, one isolated apple, no words or other objects. This pairs with green icon for crossfade."
+  },
+  "basket-empty-goals": {
+    "source": "generated-derivative",
+    "generator": "built-in image_gen",
+    "references": [
+      "basket"
+    ],
+    "runtimeWidth": 240,
+    "runtimeHeight": 184,
+    "sha256": "aebfb822d63636da33906521cfc9ad99e452ebc888b8885aeedcd4971841fded",
+    "prompt": "Use case: precise-object-edit. Edit target: attached illustrated basket with apples. Create an EMPTY basket UI sprite, in the exact same warm honey-brown watercolor storybook style. Remove all three red apples and their stems/leaves, arrows, greenery, background and orange decorative marks. Preserve basket shape, woven wood texture, brown hand-drawn outlines and oval opening. Show a dark empty interior through the oval opening. One centered isolated empty low round basket, genuine transparent alpha, no paper rectangle, no white sticker border, no text, no fruit. Keep room in top opening for independent UI apple overlays."
   }
 }

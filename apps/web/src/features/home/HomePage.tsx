@@ -4,6 +4,7 @@ import { useGarden } from '../../app/garden-context';
 import { LineIcon, Illustration } from '../../components/Illustration';
 import { FigmaMotion } from '../../design/FigmaMotion';
 import { usePreferences } from '../../lib/preferences';
+import { ProjectTree, TreeGrowth } from '../../components/GardenVisuals';
 export function HomePage() {
   const { projects, entries, results, state } = useGarden();
   const prefs = usePreferences();
@@ -60,13 +61,12 @@ export function HomePage() {
                   node={['31:3422', '31:3423', '31:3424'][active.indexOf(project) % 3]!}
                   className="forest-tree-art"
                 >
-                  <Illustration
-                    name={
-                      ['tree-seedling', 'tree-large-green', 'tree-large-full', 'tree-large-red'][
-                        project.growth.stageIndex
-                      ]!
-                    }
+                  <ProjectTree
+                    stage={project.growth.stageIndex}
                     size={180}
+                    fruits={project.fruits}
+                    harvestCount={project.growth.harvestCount}
+                    threshold={project.growth.threshold}
                   />
                 </FigmaMotion>
                 <div className="forest-progress-note">
@@ -81,6 +81,11 @@ export function HomePage() {
                   <small>{project.goalId ? project.goal : '给小树种下一颗目标苹果'}</small>
                 </div>
               </Link>
+              <p className="forest-fruit-summary">
+                树上 {project.fruits.length} 颗 ·{' '}
+                {project.fruits.filter((fruit) => fruit.percent >= 100).length} 颗待摘
+              </p>
+              <TreeGrowth {...project.growth} />
             </article>
           );
         })}

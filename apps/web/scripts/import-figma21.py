@@ -21,9 +21,12 @@ def image(node):
 archive = zipfile.ZipFile(source)
 destination = pathlib.Path('apps/web/public/assets/figma21')
 destination.mkdir(exist_ok=True)
+existing = json.loads((destination / 'manifest.json').read_text()) if (destination / 'manifest.json').exists() else {}
+# Business-specific derivatives are separate from the re-importable Figma originals.
+manifest = {name: entry for name, entry in existing.items() if entry.get('source') == 'generated-derivative'}
 for generated in destination.glob('*.webp'):
-    generated.unlink()
-manifest = {}
+    if generated.stem not in manifest:
+        generated.unlink()
 for node in nodes:
     if node['type'] != 'SYMBOL' or not node.get('name', '').startswith('图标/'):
         continue
@@ -45,4 +48,4 @@ bitmap.thumbnail((640, 640), Image.Resampling.LANCZOS)
 bitmap.save(destination / 'mascot-watering.webp', 'WEBP', quality=92, method=6, alpha_quality=100)
 manifest['mascot-watering'] = {'node': '30:1084', 'width': width, 'height': height, 'source': digest, 'runtimeWidth': bitmap.width, 'runtimeHeight': bitmap.height}
 (destination / 'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2))
-print(f'Exported {len(manifest)} exact Figma assets')
+print(f'Exported {sum(entry.get("source") != "generated-derivative" for entry in manifest.values())} exact Figma assets; preserved {sum(entry.get("source") == "generated-derivative" for entry in manifest.values())} derivatives')

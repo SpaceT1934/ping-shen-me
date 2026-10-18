@@ -11,6 +11,7 @@ import { createUuid } from '../../lib/uuid';
 import { EntryList } from '../projects/components/EntryList';
 import { SpeechInput } from '../../components/SpeechInput';
 import { aiApi } from '../../lib/ai-api';
+import { ProjectTree } from '../../components/GardenVisuals';
 type Draft = ManualDraft & { key: string; selected: boolean };
 const draftKey = 'apple-manual-draft-v2';
 function restoreDraft(): {
@@ -412,7 +413,7 @@ export function RecordsPage() {
           <Link to="/projects">看看我的方向</Link>
         </div>
         <div className="record-growth-preview">
-          <Illustration name="tree-large-full" size={130} />
+          <ProjectTree stage={0} size={130} />
           <p>
             每一次行动，
             <br />

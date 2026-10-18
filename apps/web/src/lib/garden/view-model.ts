@@ -1,10 +1,19 @@
 import type { GardenState } from '@apple/contracts';
-import { dateInZone, growthFor, goalPercent } from '@apple/domain';
+import { dateInZone, growthFor, goalPercent, treeFruitsFor } from '@apple/domain';
 export function createGardenView(state: GardenState) {
   const today = dateInZone(new Date(), state.timeZone);
+  const harvestedGoals = new Set(
+    state.results.filter((result) => result.harvestedAt).map((result) => result.goalId),
+  );
   return {
     projects: state.projects.map((project) => {
-      const goal = state.goals.find((item) => item.id === project.currentGoalId);
+      const onTreeGoals = state.goals.filter(
+        (item) => item.projectId === project.id && !item.archivedAt && !harvestedGoals.has(item.id),
+      );
+      const goal =
+        onTreeGoals.find((item) => item.id === project.currentGoalId) ||
+        onTreeGoals.find((item) => !item.completedAt) ||
+        onTreeGoals[0];
       return {
         ...project,
         goal: goal?.title || '还没有当前目标',
@@ -18,6 +27,7 @@ export function createGardenView(state: GardenState) {
         harvested: state.results.some((item) => item.projectId === project.id && item.harvestedAt),
         goals: state.goals.filter((item) => item.projectId === project.id && !item.archivedAt),
         growth: growthFor(state, project.id),
+        fruits: treeFruitsFor(state, project.id),
       };
     }),
     tasks: state.tasks

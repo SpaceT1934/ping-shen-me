@@ -6,7 +6,7 @@ import { SpeechInput } from '../../components/SpeechInput';
 import { aiApi } from '../../lib/ai-api';
 import { createUuid } from '../../lib/uuid';
 import { GoalFields } from '../projects/components/GoalFields';
-import { Illustration } from '../../components/Illustration';
+import { ProjectTree } from '../../components/GardenVisuals';
 import { categories, updatePreferences, usePreferences } from '../../lib/preferences';
 
 type Candidate = ProjectCandidate & {
@@ -113,9 +113,17 @@ export function AIProjectSeed({ onStageChange }: { onStageChange?: (generated: b
           返回，修改想做的事
         </button>
       )}
-      {candidates.map((item, index) => (
+      {candidates.map((item) => (
         <article className="ai-candidate" key={item.key}>
-          <Illustration name={['tree-red', 'tree-green', 'tree-seedling'][index % 3]!} size={78} />
+          <ProjectTree
+            stage={0}
+            size={78}
+            fruits={
+              item.goal
+                ? [{ goalId: item.key, title: item.goal.title, percent: 0, resultId: null }]
+                : []
+            }
+          />
           <div className="ai-candidate-fields">
             <label className="checkbox-line">
               <input

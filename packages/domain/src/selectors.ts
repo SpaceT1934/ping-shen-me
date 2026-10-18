@@ -17,7 +17,47 @@ export function growthFor(state: GardenState, projectId: string) {
   ).size;
   const threshold = state.projects.find((item) => item.id === projectId)?.treeStageThreshold ?? 3;
   const stageIndex = Math.min(3, Math.floor(harvestCount / threshold));
-  return { ...growthStages[stageIndex]!, count, harvestCount, threshold, stageIndex };
+  const stageProgress = stageIndex === 3 ? 1 : (harvestCount % threshold) / threshold;
+  return {
+    ...growthStages[stageIndex]!,
+    count,
+    harvestCount,
+    threshold,
+    stageIndex,
+    stageProgress,
+  };
+}
+/** A goal owns one apple until it is harvested. Tree artwork never invents fruit. */
+export function treeFruitsFor(state: GardenState, projectId: string) {
+  const results = new Map(
+    state.results
+      .filter((result) => result.projectId === projectId)
+      .map((result) => [result.goalId, result]),
+  );
+  return state.goals
+    .filter((goal) => {
+      const result = results.get(goal.id);
+      return (
+        goal.projectId === projectId &&
+        !result?.harvestedAt &&
+        (!goal.archivedAt || Boolean(result))
+      );
+    })
+    .map((goal) => {
+      const result = results.get(goal.id);
+      return {
+        goalId: goal.id,
+        title: goal.title,
+        percent: goal.completedAt ? 100 : goalPercent(goal),
+        resultId: result?.id ?? null,
+      };
+    });
+}
+export type TreeFruit = ReturnType<typeof treeFruitsFor>[number];
+/** Continuous crossfade through a golden midpoint; readiness still requires 100%. */
+export function fruitColorMix(percent: number) {
+  const progress = Math.max(0, Math.min(100, Number.isFinite(percent) ? percent : 0));
+  return { amber: Math.min(1, progress / 50), red: Math.max(0, (progress - 50) / 50) };
 }
 export function fruitStage(percent: number) {
   return percent >= 100 ? 4 : percent > 60 ? 3 : percent > 30 ? 2 : percent > 0 ? 1 : 0;

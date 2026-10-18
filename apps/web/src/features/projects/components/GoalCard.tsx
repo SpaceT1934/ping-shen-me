@@ -8,12 +8,13 @@ import { GoalFields, defaultGoal } from './GoalFields';
 import type { ProjectView } from '../../../lib/garden/view-model';
 function GoalItem({ goal, project }: { goal: Goal; project: ProjectView }) {
   const { busy, updateProgress, results, setPrimaryGoal } = useGarden();
-  const [value, setValue] = useState(goal.currentValue);
+  const [draft, setDraft] = useState<{ base: number; value: number } | null>(null);
+  const value = draft?.base === goal.currentValue ? draft.value : goal.currentValue;
   const navigate = useNavigate();
   const result = results.find((item) => item.goalId === goal.id);
   const percent = goalPercent(goal);
   return (
-    <article className="goal-card target-goal">
+    <article id={`goal-${goal.id}`} className="goal-card target-goal">
       <GoalFruit percent={percent} size={58} />
       <p className="section-kicker">
         {project.goalId === goal.id ? '主要目标' : '阶段目标'}
@@ -71,7 +72,9 @@ function GoalItem({ goal, project }: { goal: Goal; project: ProjectView }) {
                         max={goal.target}
                         step={goal.type === 'count' ? 1 : 0.1}
                         value={value}
-                        onChange={(event) => setValue(Number(event.target.value))}
+                        onChange={(event) =>
+                          setDraft({ base: goal.currentValue, value: Number(event.target.value) })
+                        }
                         required
                       />
                     </label>
@@ -93,14 +96,17 @@ export function GoalCard({ project }: { project: ProjectView }) {
   const [nextGoal, setNextGoal] = useState(defaultGoal);
   const active = project.goals.filter((goal) => !goal.completedAt);
   const ripe = project.goals.filter((goal) => goal.completedAt);
+  const onTreeIds = new Set(project.fruits.map((fruit) => fruit.goalId));
+  const onTree = project.goals.filter((goal) => onTreeIds.has(goal.id));
+  const harvested = ripe.filter((goal) => !onTreeIds.has(goal.id));
   return (
-    <section className="project-goals">
+    <section id="project-goals" className="project-goals">
       <div className="goal-section-title">
         <h2>这棵树的目标</h2>
         <small>一个目标，一颗苹果</small>
       </div>
-      {active.map((goal) => (
-        <GoalItem key={`${goal.id}-${goal.currentValue}`} goal={goal} project={project} />
+      {onTree.map((goal) => (
+        <GoalItem key={goal.id} goal={goal} project={project} />
       ))}
       {!active.length && (
         <p className="small-print">
@@ -134,10 +140,10 @@ export function GoalCard({ project }: { project: ProjectView }) {
           )}
         </>
       )}
-      {ripe.length > 0 && (
+      {harvested.length > 0 && (
         <details className="completed-goals">
-          <summary>已达成的目标 · {ripe.length}</summary>
-          {ripe.map((goal) => (
+          <summary>已摘取的目标 · {harvested.length}</summary>
+          {harvested.map((goal) => (
             <GoalItem key={goal.id} goal={goal} project={project} />
           ))}
         </details>

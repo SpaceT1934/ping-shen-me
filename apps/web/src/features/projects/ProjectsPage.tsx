@@ -52,7 +52,13 @@ export function ProjectsPage() {
           <Link className="project-card" key={project.id} to={`/projects/${project.id}`}>
             <div className="project-card-top">
               <span className={`project-icon ${project.color}`}>
-                <ProjectTree stage={project.growth.stageIndex} size={65} />
+                <ProjectTree
+                  stage={project.growth.stageIndex}
+                  size={65}
+                  fruits={project.fruits}
+                  harvestCount={project.growth.harvestCount}
+                  threshold={project.growth.threshold}
+                />
               </span>
               <div>
                 <h3>{project.name}</h3>

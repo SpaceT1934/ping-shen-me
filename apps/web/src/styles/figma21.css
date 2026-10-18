@@ -1253,3 +1253,197 @@ body {
 .share-actions .text-button {
   margin-top: 9px;
 }
+
+/* Goal-driven apples: tree base has no painted fruit, so every apple maps to a goal. */
+.project-tree-layers {
+  position: absolute;
+  inset: 0;
+  display: block;
+  transform: scale(var(--tree-scale));
+  transform-origin: 50% 94%;
+  transition: transform 800ms ease;
+}
+.project-tree-layers > .project-tree-base {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.tree-goal-apple {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 25%;
+  aspect-ratio: 1;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  z-index: 1;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.tree-goal-apple.is-ripe {
+  cursor: pointer;
+}
+.tree-goal-apple:focus-visible {
+  outline: 2px dashed var(--ink);
+  outline-offset: 2px;
+}
+.tree-goal-apple .goal-fruit {
+  max-width: 100%;
+  max-height: 100%;
+}
+.tree-goal-apple.is-ripe:hover {
+  filter: drop-shadow(0 0 3px #fff5a7);
+}
+.tree-more-apples {
+  position: absolute;
+  right: 8%;
+  top: 50%;
+  z-index: 2;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1px 5px;
+  font-size: 12px;
+}
+.goal-fruit {
+  transform: none;
+}
+.goal-fruit .fruit-amber {
+  opacity: var(--fruit-amber, 0);
+}
+.goal-fruit .fruit-red {
+  opacity: var(--fruit-red, 0);
+}
+.goal-fruit .fruit-amber,
+.goal-fruit .fruit-red {
+  transition: opacity 800ms ease;
+}
+.goal-fruit img {
+  object-fit: contain;
+  filter: none;
+}
+.forest-tree-art > .project-tree {
+  width: 100% !important;
+  height: 100% !important;
+}
+.forest-fruit-summary {
+  margin: 3px 0;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.tree-growth-progress {
+  margin: 10px 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #607449;
+}
+.tree-growth-progress .progress-track {
+  height: 6px;
+  margin-top: 4px;
+}
+.tree-growth-progress .progress-track > span {
+  background: #8caf68;
+  transition: width 800ms ease;
+}
+.forest-tree-card .tree-growth-progress {
+  width: 92%;
+  margin: 3px auto 8px;
+  font-size: 11px;
+  text-align: center;
+}
+.target-goal {
+  scroll-margin-top: 16px;
+}
+.harvest-success {
+  animation: harvest-growth-notice 650ms ease both;
+}
+@keyframes harvest-growth-notice {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .project-tree-layers,
+  .goal-fruit .fruit-amber,
+  .goal-fruit .fruit-red,
+  .tree-growth-progress .progress-track > span {
+    transition: none;
+  }
+}
+.basket-art {
+  isolation: isolate;
+}
+.basket-art > img {
+  z-index: 1;
+}
+.basket-art .basket-fruit {
+  z-index: 2;
+  left: 35%;
+  top: 7%;
+  width: 31%;
+  height: 43%;
+  transform: rotate(-7deg);
+}
+.basket-art .basket-fruit-1 {
+  left: 17%;
+  top: 12%;
+  transform: rotate(-15deg);
+}
+.basket-art .basket-fruit-2 {
+  left: 53%;
+  top: 12%;
+  transform: rotate(10deg);
+}
+.basket-art .basket-fruit > img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.harvest-picked-apple {
+  position: absolute;
+  pointer-events: none;
+  left: 42%;
+  top: 45%;
+  z-index: 5;
+  animation: picked-apple-to-basket 850ms ease-in both;
+}
+@keyframes picked-apple-to-basket {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  40% {
+    opacity: 1;
+    transform: translate(35px, -20px) rotate(10deg) scale(0.9);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(95px, 85px) rotate(20deg) scale(0.5);
+  }
+}
+[data-motion='off'] .harvest-picked-apple {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .harvest-picked-apple {
+    display: none;
+  }
+}
+.basket-art > .basket-front {
+  z-index: 3;
+  clip-path: inset(45% 0 0 0);
+}

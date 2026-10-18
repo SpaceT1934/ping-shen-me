@@ -50,7 +50,7 @@ garden_entity_links 是不可重复的身份绑定索引，以用户、绑定类
 
 ## V1.1 兼容与视图
 
-`styles/journal.css` 管理水彩手帐主题、树林和收获场景；`Illustration.tsx` 统一引用参考素材和操作图标；`GardenVisuals.tsx` 集中渲染四阶段树、五档目标苹果和果篮；GoalCard 负责多目标与主要目标选择，ResultsList 区分树上待摘与已收获。HomePage 只组合项目森林，不实现业务计数规则。
+`styles/journal.css` 管理水彩手帐主题、树林和收获场景；`Illustration.tsx` 统一引用参考素材和操作图标；`GardenVisuals.tsx` 集中渲染独立无果树底图、按目标百分比连续混色的苹果、摘果成长条和真实果篮；GoalCard 负责多目标与主要目标选择，ResultsList 区分树上待摘与已收获。HomePage 只组合项目森林，不实现业务计数规则。
 
 本次不改变数据库事实存储方式，使用兼容的可选 `Project.treeStageThreshold` 和已有 Record.goalId/contribution、Result.harvestedAt。旧快照没有阈值时默认 3（已有显式 1/2 配置保持），不清空、不自动补录收获。API project 保留旧 `goal` 字段并新增完整 `goals`，record 新增关联与贡献，便于旧客户端兼容读取。
 
@@ -63,3 +63,5 @@ garden_entity_links 是不可重复的身份绑定索引，以用户、绑定类
 `public/assets/figma21` 保存新文件的可见素材和矢量图标。导出时忽略已经被隐藏的旧图层，优先使用可见 @4x 新素材；移动端 WebP 保持原比例并压缩。原始哈希、节点与尺寸记入 manifest；重建脚本在 `apps/web/scripts/import-figma21.py` 和 `export-figma-motion.py`。字体沿用完整手写字体分片。
 
 浏览器偏好与业务事实分开：`lib/preferences.ts` 管理本机设置，项目分类单独随 Project 持久化，`features/settings/use-garden-preferences.ts` 应用主题和前台提醒。日签图片由前端根据真实成果和任务生成。AI 拆任务经过 Node 会话与项目归属校验，再调用 Python 结构化模型；用户确认之前不写入数据库。
+
+目标苹果由 `treeFruitsFor` 从 Goal 与 Result 派生，一目标一苹果，已摘取不再挂树；`fruitColorMix` 只负责连续色彩权重，成熟判定仍为 100%。`growthFor` 只按手动摘取的唯一目标计算成长；行动和待摘成熟果均不增加成长。`ProjectView` 不再把已摘取目标作为首页进度目标。树底图和苹果分层，所有页面共用 GardenVisuals；组件内部不写业务状态。

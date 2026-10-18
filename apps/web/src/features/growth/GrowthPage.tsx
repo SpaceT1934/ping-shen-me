@@ -7,7 +7,7 @@ import { useActionFeedback } from '../../lib/garden/use-action-feedback';
 import { PageHeading } from '../../components/PageHeading';
 import { LineIcon, Illustration } from '../../components/Illustration';
 import { LivingMascot } from '../../components/AmbientScene';
-import { GoalFruit, ProjectTree, FruitBasket } from '../../components/GardenVisuals';
+import { GoalFruit, ProjectTree, FruitBasket, TreeGrowth } from '../../components/GardenVisuals';
 import { usePreferences } from '../../lib/preferences';
 import { prepareHarvestSound } from '../../lib/harvest-sound';
 import { FigmaMotion } from '../../design/FigmaMotion';
@@ -36,13 +36,12 @@ export function GrowthPage() {
       </div>
       {grown[0] && (
         <section className="feedback-hero fig-card">
-          <Illustration
-            name={
-              ['tree-seedling', 'tree-large-green', 'tree-large-full', 'tree-large-red'][
-                grown[0].growth.stageIndex
-              ]!
-            }
+          <ProjectTree
+            stage={grown[0].growth.stageIndex}
             size={145}
+            fruits={grown[0].fruits}
+            harvestCount={grown[0].growth.harvestCount}
+            threshold={grown[0].growth.threshold}
           />
           <div>
             <h2>{grown[0].name}</h2>
@@ -52,7 +51,7 @@ export function GrowthPage() {
             <p>
               每一次认真行动，
               <br />
-              都会让小树更有力量。
+              都会让目标苹果更靠近成熟。
             </p>
           </div>
         </section>
@@ -77,7 +76,13 @@ export function GrowthPage() {
       </h2>
       {grown.map((project) => (
         <section className="feedback-project" key={project.id}>
-          <ProjectTree stage={project.growth.stageIndex} size={95} />
+          <ProjectTree
+            stage={project.growth.stageIndex}
+            size={95}
+            fruits={project.fruits}
+            harvestCount={project.growth.harvestCount}
+            threshold={project.growth.threshold}
+          />
           <div>
             <h2>{project.name}</h2>
             <p>
@@ -85,7 +90,9 @@ export function GrowthPage() {
             </p>
             <span className="feedback-water">已经浇过水啦 ✓</span>
           </div>
-          <GoalFruit percent={project.percent} size={45} />
+          {project.fruits.find((fruit) => fruit.goalId === project.goalId) && (
+            <GoalFruit percent={project.percent} size={45} />
+          )}
         </section>
       ))}
       <div className="gentle-note">
@@ -105,10 +112,10 @@ export function GrowthPage() {
       {fruitId && (
         <div className="ripe-fruit-transition" aria-label="目标已经达成，果实成熟">
           <FigmaMotion node="31:3094">
-            <Illustration name="fruit-transition-orange" size={75} />
+            <GoalFruit percent={70} size={75} />
           </FigmaMotion>
           <FigmaMotion node="31:3095">
-            <Illustration name="fruit-transition-red" size={75} />
+            <GoalFruit percent={100} size={75} />
           </FigmaMotion>
         </div>
       )}
@@ -126,12 +133,21 @@ export function FruitPage() {
   const prefs = usePreferences();
   const [params] = useSearchParams();
   const { projects, results, harvestResult, busy } = useGarden();
-  const [caught, setCaught] = useState(false);
+  const [caughtId, setCaughtId] = useState<string | null>(null);
   const [followUp, setFollowUp] = useState<'continue' | 'complete' | 'next_goal'>('continue');
   const result =
     results.find((item) => item.id === params.get('result')) ||
+    results.find((item) => item.projectId === params.get('project') && !item.harvestedAt) ||
     results.find((item) => item.projectId === params.get('project'));
   const project = projects.find((item) => item.id === result?.projectId);
+  const caught = Boolean(result && caughtId === result.id);
+  const pick = async () => {
+    if (!result || result.harvestedAt || busy) return;
+    const sound = prepareHarvestSound(prefs.sound);
+    const saved = await harvestResult(result.id, followUp);
+    sound(saved);
+    if (saved) setCaughtId(result.id);
+  };
   return (
     <div className={`harvest-page ${caught ? 'just-harvested' : ''}`}>
       <div className="harvest-heading">
@@ -159,13 +175,19 @@ export function FruitPage() {
                 : '慢慢照顾你的目标，它会一点点长大。'}
           </p>
         </div>
-        <div className="harvest-tree">
-          <ProjectTree stage={project?.growth.stageIndex ?? 0} size={250} />
-          {result && (!result.harvestedAt || caught) && (
-            <div className="harvest-target">
-              <GoalFruit percent={100} size={62} />
-            </div>
-          )}
+        <div id="project-goals" className="harvest-tree">
+          <ProjectTree
+            stage={project?.growth.stageIndex ?? 0}
+            size={250}
+            fruits={project?.fruits}
+            harvestCount={project?.growth.harvestCount}
+            threshold={project?.growth.threshold}
+            interactive
+            onPick={() => void pick()}
+            pickResultId={result?.id}
+            picking={busy}
+            goalBasePath={project ? `/projects/${project.id}` : ''}
+          />
         </div>
         <div className="harvest-companion">
           <LivingMascot size={115} mood={caught ? 'harvest' : 'cheer'} />
@@ -173,6 +195,11 @@ export function FruitPage() {
         <div className="harvest-basket">
           <FruitBasket count={project?.growth.harvestCount ?? 0} />
         </div>
+        {caught && (
+          <span className="harvest-picked-apple" aria-hidden="true">
+            <GoalFruit percent={100} size={42} />
+          </span>
+        )}
       </section>
       <section className="harvest-paper">
         <p className="section-kicker">{project?.name || '属于你的成长'}</p>
@@ -200,11 +227,12 @@ export function FruitPage() {
               <div className="harvest-success" role="status">
                 已放入「{project.name}」的果篮，共 {project.growth.harvestCount} 颗。
                 <br />
-                小树现在是{project.growth.name}。
+                小树获得 +1 成长，现在是{project.growth.name}。
                 {project.growth.stageIndex < 3 &&
                   `再收获 ${project.growth.threshold - (project.growth.harvestCount % project.growth.threshold)} 颗，就能长大一阶段。`}
               </div>
             )}
+            {project && <TreeGrowth {...project.growth} />}
             {!result.harvestedAt && (
               <label className="harvest-choice">
                 收获之后
@@ -231,16 +259,7 @@ export function FruitPage() {
               <LineIcon name="arrow" size={21} />
             </Link>
           ) : (
-            <button
-              className="coral-button full-width"
-              disabled={busy}
-              onClick={async () => {
-                const sound = prepareHarvestSound(prefs.sound);
-                const saved = await harvestResult(result.id, followUp);
-                sound(saved);
-                if (saved) setCaught(true);
-              }}
-            >
+            <button className="coral-button full-width" disabled={busy} onClick={() => void pick()}>
               {busy ? '正在收获…' : '摘下这颗果实'}
               <LineIcon name="arrow" size={21} />
             </button>

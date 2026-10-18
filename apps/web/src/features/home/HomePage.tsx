@@ -99,21 +99,26 @@ export function HomePage() {
         </Link>
       </div>
       <div className="forest-footer">
-        <Link className="quick-record" to="/records">
-          <span className="mic-circle">
-            <LineIcon name="mic" size={22} />
-          </span>
-          <span>说说今天做了什么…</span>
-          <LineIcon name="arrow" size={19} />
-        </Link>
-        <Link className="forest-mood-entry" to="/feelings">
-          <Illustration name="heart" size={28} />
-          <span>
-            <strong>说说心情</strong>
-            <small>累了也可以来，苹什猫陪你聊聊</small>
-          </span>
-          <LineIcon name="arrow" size={19} />
-        </Link>
+        <div className="forest-entry-options">
+          <Link className="quick-record" to="/records">
+            <span className="mic-circle">
+              <LineIcon name="mic" size={22} />
+            </span>
+            <span>
+              <strong>记录行动</strong>
+              <small>说说今天做了什么</small>
+            </span>
+            <LineIcon name="arrow" size={19} />
+          </Link>
+          <Link className="forest-mood-entry" to="/feelings">
+            <Illustration name="heart" size={28} />
+            <span>
+              <strong>说说心情</strong>
+              <small>累了也可以来聊聊</small>
+            </span>
+            <LineIcon name="arrow" size={19} />
+          </Link>
+        </div>
         <p>
           已记录 {entries.filter((item) => item.type === 'action').length} 次行动 · 收获{' '}
           {results.filter((item) => item.harvestedAt).length} 颗果实

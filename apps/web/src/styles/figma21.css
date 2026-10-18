@@ -1631,3 +1631,45 @@ body {
   margin: 10px 0 16px;
   text-align: center;
 }
+.forest-entry-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.forest-entry-options > a {
+  min-width: 0;
+  min-height: 72px;
+  margin: 0;
+  padding: 10px;
+  gap: 8px;
+  text-align: left;
+}
+.forest-entry-options > a > span:not(.mic-circle) {
+  min-width: 0;
+  flex: 1;
+}
+.forest-entry-options strong {
+  display: block;
+  font-size: 18px;
+  line-height: 1.4;
+}
+.forest-entry-options small {
+  display: block;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-top: 4px;
+  color: #897e68;
+}
+.forest-entry-options .mic-circle {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+.forest-entry-options > a > img {
+  flex-shrink: 0;
+  width: 25px;
+  height: 25px;
+}
+.forest-entry-options > a > .journal-line-icon {
+  display: none;
+}

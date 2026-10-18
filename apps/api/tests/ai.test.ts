@@ -247,3 +247,122 @@ it('短反馈只读已保存行动，模型不可用时回退且不改业务数�
   await post(cookie, '/ai/feedback', {});
   expect(fetch).toHaveBeenCalledTimes(1);
 });
+
+describe('情绪入口与行动分离', () => {
+  it('报告中的纯情绪表达不调用分类模型、不生成行动；混合内容剔除感受项', async () => {
+    const cookie = await session();
+    const before = await snapshot(cookie);
+    const fetch = mockProvider({});
+    const text = '我今天很累，我觉得我什么事情都没做';
+    const response = await post(cookie, '/ai/records/analyze', { text });
+    expect(response.statusCode).toBe(200);
+    expect(response.json().data).toEqual({ items: [], emotion_text: text });
+    expect(fetch).not.toHaveBeenCalled();
+    mockProvider({
+      items: [
+        {
+          content: '我很累',
+          type: 'action',
+          project_id: null,
+          emotion: '累',
+          source_text: '我很累',
+        },
+        {
+          content: '剪完视频',
+          type: 'action',
+          project_id: null,
+          emotion: null,
+          source_text: '剪完视频',
+        },
+      ],
+    });
+    const mixed = await post(cookie, '/ai/records/analyze', { text: '我很累。剪完视频' });
+    expect(mixed.json().data.items.map((item: { content: string }) => item.content)).toEqual([
+      '剪完视频',
+    ]);
+    expect(mixed.json().data.emotion_text).toBe('我很累');
+    expect((await snapshot(cookie)).version).toBe(before.version);
+    expect((await snapshot(cookie)).records).toEqual(before.records);
+  });
+  it('陪伴只读当前用户今天的有效行动，忽略客户端伪造上下文，聊天不推进任何数据', async () => {
+    const cookie = await session();
+    const own = await project(cookie, '我的读书');
+    const foreignCookie = await session();
+    const foreign = await project(foreignCookie, '别人的工作');
+    await post(foreignCookie, '/record-batches/commit', {
+      items: [
+        { client_item_id: 'foreign', type: 'action', content: '私密事项', project_id: foreign },
+      ],
+    });
+    await post(cookie, '/record-batches/commit', {
+      items: [
+        { client_item_id: 'valid', type: 'action', content: '读完一章', project_id: own },
+        {
+          client_item_id: 'emotion-old',
+          type: 'action',
+          content: '我很累，我什么都没做',
+          project_id: own,
+        },
+        { client_item_id: 'idea', type: 'idea', content: '想读新书', project_id: own },
+        {
+          client_item_id: 'yesterday',
+          type: 'action',
+          content: '过去的行动',
+          occurred_at: '2026-01-01T12:00:00+08:00',
+          project_id: own,
+        },
+      ],
+    });
+    const before = await snapshot(cookie);
+    const action = before.records.find((item: { content: string }) => item.content === '读完一章');
+    const fetch = mockProvider({
+      reply: '先歇一会儿。今天你还读完了一章，这份努力值得被看见。',
+      referenced_action_ids: [action.id],
+    });
+    const response = await post(cookie, '/ai/emotions/respond', {
+      text: '我很累，什么都没做',
+      history: [{ role: 'user', content: '想说说心情' }],
+      today: { action_count: 999, actions: [] },
+      user_id: 'foreign',
+    });
+    expect(response.statusCode).toBe(200);
+    expect(response.json().data.mode).toBe('ai');
+    const context = JSON.parse(fetch.mock.calls[0]![1].body);
+    expect(context.today.action_count).toBe(1);
+    expect(context.today.actions).toEqual([
+      { id: action.id, content: '读完一章', project_name: '我的读书' },
+    ]);
+    expect(context.history).toEqual([{ role: 'user', content: '想说说心情' }]);
+    expect(await snapshot(cookie)).toEqual(before);
+  });
+  it('无记录或模型不可用也不杜撰努力；越权引用降为基础陪伴，无会话不能聊天', async () => {
+    const cookie = await session();
+    const before = await snapshot(cookie);
+    mockProvider({ error: { code: 'UNAVAILABLE' } }, 503);
+    const result = await post(cookie, '/ai/emotions/respond', { text: '很累' });
+    expect(result.statusCode).toBe(200);
+    expect(result.json().data).toMatchObject({
+      mode: 'fallback',
+      today: { action_count: 0, actions: [] },
+      referenced_action_ids: [],
+    });
+    expect(result.json().data.reply).not.toContain('已经做了很多');
+    mockProvider({ reply: '假的行动', referenced_action_ids: ['foreign-record'] });
+    expect((await post(cookie, '/ai/emotions/respond', { text: '难过' })).json().data.mode).toBe(
+      'fallback',
+    );
+    expect(await snapshot(cookie)).toEqual(before);
+    expect(
+      (
+        await app.inject({
+          method: 'POST',
+          url: '/api/v1/ai/emotions/respond',
+          payload: { text: '很累' },
+        })
+      ).statusCode,
+    ).toBe(401);
+    expect(
+      (await post(cookie, '/ai/emotions/respond', { text: 'x'.repeat(2001) })).statusCode,
+    ).toBe(422);
+  });
+});

@@ -214,3 +214,41 @@ def test_short_feedback_is_bounded_and_does_not_claim_growth():
     assert "不声称目标完成、果实成熟或小树升级" in calls[0]["messages"][0]["content"]
     client, _ = setup({"text": "字" * 61})
     assert post(client, "/feedback", {"actions": ["剪完视频"]}).status_code == 503
+
+
+def test_emotion_dialogue_uses_only_supplied_today_and_does_not_extract_actions():
+    client, calls = setup({"reply": "先休息一下。今天读完一章也是实实在在的付出。", "referenced_action_ids": ["a1"]})
+    body = {"text": "我很累，感觉什么都没做", "history": [{"role": "user", "content": "想聊聊"}],
+            "today": {"date": "2026-10-18", "action_count": 1, "actions": [{"id": "a1", "content": "读完一章", "project_name": "读书"}]}}
+    response = post(client, "/emotions/respond", body)
+    assert response.status_code == 200
+    assert response.json()["referenced_action_ids"] == ["a1"]
+    system = calls[0]["messages"][0]["content"]
+    assert "这是陪伴对话，不是事项提取" in system
+    assert "不能杜撰做过的事或次数" in system
+    assert "不得声称此对话已保存行动" in system
+    assert json.loads(calls[0]["messages"][1]["content"])["today"]["action_count"] == 1
+
+
+@pytest.mark.parametrize("result", [
+    {"reply": "虚构", "referenced_action_ids": ["foreign"]},
+    {"reply": "字" * 601, "referenced_action_ids": []},
+    {"reply": "", "referenced_action_ids": []},
+])
+def test_emotion_output_rejects_invented_references_and_invalid_messages(result):
+    client, calls = setup(result)
+    response = post(client, "/emotions/respond", {"text": "很累", "today": {"date": "2026-10-18", "action_count": 0, "actions": []}})
+    assert response.status_code == 503
+    assert len(calls) == 1
+
+
+def test_records_separate_emotion_source_from_actual_events():
+    client, calls = setup({"items": [{"content": "剪完视频", "type": "action", "project_id": None, "goal_id": None, "emotion": None, "source_text": "剪完视频"}], "emotion_text": "我很累"})
+    response = post(client, "/records/analyze", {"text": "我很累，剪完视频", "projects": []})
+    assert response.status_code == 200
+    assert response.json()["emotion_text"] == "我很累"
+    assert len(response.json()["items"]) == 1
+    assert "情绪、感受、自我评价都不是行动" in calls[0]["messages"][0]["content"]
+    assert "emotion_text" in calls[0]["response_format"]["json_schema"]["schema"]["required"]
+    client, _ = setup({"items": [], "emotion_text": "原文未说的感觉"})
+    assert post(client, "/records/analyze", {"text": "我很累", "projects": []}).status_code == 503

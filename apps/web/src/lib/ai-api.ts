@@ -6,9 +6,18 @@ import {
   transcriptionSchema,
   actionFeedbackSchema,
   taskPlanSchema,
+  emotionChatSchema,
+  type EmotionMessage,
 } from '@apple/contracts';
 import { apiRequest } from './api';
 export const aiApi = {
+  emotions: (text: string, history: EmotionMessage[] = []) =>
+    apiRequest(
+      '/ai/emotions/respond',
+      emotionChatSchema,
+      { method: 'POST', body: JSON.stringify({ text, history }) },
+      40_000,
+    ),
   plan: (projectId: string, text: string) =>
     apiRequest(
       '/ai/tasks/plan',
@@ -44,6 +53,7 @@ export const aiApi = {
       40_000,
     );
     return {
+      emotionText: data.emotion_text,
       items: data.items.map((item) => ({
         key: item.client_item_id,
         content: item.content,

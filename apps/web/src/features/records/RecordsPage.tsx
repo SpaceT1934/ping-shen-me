@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { dateInZone } from '@apple/domain';
+import { dateInZone, isFeelingOnly } from '@apple/domain';
 import { manualDraftSchema, type ManualDraft } from '@apple/contracts';
 import { z } from 'zod';
 import { useGarden } from '../../app/garden-context';
@@ -61,6 +61,7 @@ export function RecordsPage() {
   const [drafts, setDrafts] = useState<Draft[]>(savedDraft.drafts);
   const [confirming, setConfirming] = useState(savedDraft.confirming);
   const [notice, setNotice] = useState('');
+  const [emotionText, setEmotionText] = useState<string | null>(null);
   const [history, setHistory] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [voiceBusy, setVoiceBusy] = useState(false);
@@ -158,6 +159,15 @@ export function RecordsPage() {
         <p className="small-print">
           请检查分类、方向和日期；未归类记录也能保存。目标进度由你确认贡献数量。
         </p>
+        {emotionText && (
+          <Link
+            className="record-emotion-link"
+            to="/feelings"
+            state={{ initialMessage: emotionText }}
+          >
+            你说的心情没有当作行动。想聊聊这一部分？→
+          </Link>
+        )}
         {drafts[0]?.sourceText && (
           <section className="fig-card ai-classification">
             <h2>AI 建议归类</h2>
@@ -378,6 +388,9 @@ export function RecordsPage() {
           <LineIcon name="record" size={32} />
         </span>
         <h2>写下今天的一点努力</h2>
+        <Link className="record-emotion-link" to="/feelings">
+          今天只是有点累？去说说心情 →
+        </Link>
         <textarea
           aria-label="今天的记录"
           value={text}
@@ -429,7 +442,12 @@ export function RecordsPage() {
             setNotice('');
             try {
               const result = await aiApi.records(text, inputSource);
+              setEmotionText(result.emotionText);
               if (!result.items.length) {
+                if (result.emotionText) {
+                  navigate('/feelings', { state: { initialMessage: result.emotionText } });
+                  return;
+                }
                 setNotice('没有识别出可保存的事项，可以补充描述或手动整理。');
                 return;
               }
@@ -448,11 +466,16 @@ export function RecordsPage() {
           className="outline-button full-width"
           disabled={!text.trim() || analyzing || voiceBusy}
           onClick={() => {
-            const items = text
+            if (isFeelingOnly(text)) {
+              navigate('/feelings', { state: { initialMessage: text } });
+              return;
+            }
+            const parts = text
               .split(/[。；;\n]+/)
               .map((item) => item.trim())
-              .filter(Boolean)
-              .map(blankDraft);
+              .filter(Boolean);
+            setEmotionText(parts.find(isFeelingOnly) ?? null);
+            const items = parts.filter((item) => !isFeelingOnly(item)).map(blankDraft);
             if (items.length) {
               if (items.length > 50) {
                 setNotice('单次最多整理 50 条，请分批保存；原文已保留。');

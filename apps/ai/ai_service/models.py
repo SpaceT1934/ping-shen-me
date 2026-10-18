@@ -81,3 +81,26 @@ class TaskPlanRequest(Input):
 class TaskPlanItem(Input):
     title: Annotated[str, Field(min_length=1, max_length=80)]
     description: Annotated[str, Field(min_length=1, max_length=110)]
+
+
+class EmotionMessage(Input):
+    role: Literal["user", "assistant"]
+    content: Text
+
+
+class EmotionAction(Input):
+    id: Id
+    content: Text
+    project_name: Annotated[str, Field(max_length=200)] | None
+
+
+class EmotionToday(Input):
+    date: Annotated[str, Field(pattern=r"^\d{4}-\d{2}-\d{2}$")]
+    action_count: Annotated[int, Field(ge=0)]
+    actions: Annotated[list[EmotionAction], Field(max_length=6)]
+
+
+class EmotionRequest(Input):
+    text: Text
+    history: Annotated[list[EmotionMessage], Field(max_length=10)] = Field(default_factory=list)
+    today: EmotionToday

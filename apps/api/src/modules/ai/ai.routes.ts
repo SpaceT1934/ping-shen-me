@@ -15,14 +15,16 @@ import {
   taskPlanSchema,
   projectCategorySchema,
 } from '@apple/contracts';
-import { DomainError } from '@apple/domain';
+import { DomainError, isFeelingOnly } from '@apple/domain';
 import type { GardenRepository } from '../../repositories/garden.repository.js';
 import type { Env } from '../../config/env.js';
 import { createSessionService } from '../session/session.service.js';
 import { createAiClient } from './ai.client.js';
 import { reportDto } from '../garden/http-presenters.js';
+import { registerEmotionRoutes } from './emotion.routes.js';
 
 const pythonRecords = z.object({
+  emotion_text: z.string().min(1).max(2000).nullable().default(null),
   items: z
     .array(
       z.object({
@@ -110,6 +112,7 @@ export const registerAiRoutes: FastifyPluginAsync<{
     const user = await sessions.require(request);
     const body = recordAnalysisInputSchema.parse(request.body);
     limit(user);
+    if (isFeelingOnly(body.text)) return { items: [], emotion_text: body.text };
     const state = await repository.read(user);
     const projects = state.projects
       .filter((p) => p.status === 'active')
@@ -123,28 +126,35 @@ export const registerAiRoutes: FastifyPluginAsync<{
       }));
     const ids = new Set(projects.map((p) => p.id));
     const result = await call('/records/analyze', pythonRecords, { text: body.text, projects });
+    const feelings = result.items.filter(
+      (item) => isFeelingOnly(item.content) || isFeelingOnly(item.source_text),
+    );
     const mapped = {
-      items: result.items.map((item) => ({
-        content: item.content,
-        type: item.type,
-        client_item_id: randomUUID(),
-        project_id: item.project_id && ids.has(item.project_id) ? item.project_id : null,
-        goal_id:
-          item.type === 'action' &&
-          state.goals.some(
-            (goal) =>
-              goal.id === item.goal_id &&
-              goal.projectId === item.project_id &&
-              !goal.completedAt &&
-              !goal.archivedAt,
-          )
-            ? item.goal_id
-            : null,
-        emotion: item.emotion,
-        source_text: item.source_text,
-      })),
+      emotion_text: result.emotion_text ?? feelings[0]?.source_text ?? null,
+      items: result.items
+        .filter((item) => !feelings.includes(item))
+        .map((item) => ({
+          content: item.content,
+          type: item.type,
+          client_item_id: randomUUID(),
+          project_id: item.project_id && ids.has(item.project_id) ? item.project_id : null,
+          goal_id:
+            item.type === 'action' &&
+            state.goals.some(
+              (goal) =>
+                goal.id === item.goal_id &&
+                goal.projectId === item.project_id &&
+                !goal.completedAt &&
+                !goal.archivedAt,
+            )
+              ? item.goal_id
+              : null,
+          emotion: item.emotion,
+          source_text: item.source_text,
+        })),
     };
     if (
+      (mapped.emotion_text && !body.text.includes(mapped.emotion_text)) ||
       mapped.items.some(
         (item) =>
           !item.source_text ||
@@ -204,7 +214,7 @@ export const registerAiRoutes: FastifyPluginAsync<{
     const user = await sessions.require(request);
     const state = await repository.read(user);
     const actions = state.records
-      .filter((item) => !item.deletedAt && item.type === 'action')
+      .filter((item) => !item.deletedAt && item.type === 'action' && !isFeelingOnly(item.content))
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
       .slice(0, 3)
       .map((item) => item.content);
@@ -239,4 +249,5 @@ export const registerAiRoutes: FastifyPluginAsync<{
       mime_type: body.mime_type,
     });
   });
+  await app.register(registerEmotionRoutes, { repository, env, limit });
 };

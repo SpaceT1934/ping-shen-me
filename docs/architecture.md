@@ -46,7 +46,7 @@ garden_entity_links 是不可重复的身份绑定索引，以用户、绑定类
 
 目标建议保存为普通 Record，不替换当前 Goal。普通记录和任务完成不自动推进目标；关联具体 Goal 的 Action 由用户确认实际贡献后可推进，或通过独立进度接口更新。项目可有多个 Goal 和一个主要 Goal；目标成熟只创建待摘成果，手动收获后才计入独立果篮和树阶段。收获与结束项目、创建下一目标分别提交。
 
-现已接入 Python/FastAPI AI 服务，Node 根据当前会话读取项目上下文并调用 Python。AI 只生成候选草稿，用户确认后调用 record-batches/commit，不直接修改数据库。供应商密钥只存在于 Python 服务配置中。语音采用 `qwen-audio-3.1-asr-flash`，确认免费额度和用完即停后启用；细节见根目录的 `AI接入说明.md`。正式账号可替换会话解析，业务仍只接受服务端确认的身份。
+现已接入 Python/FastAPI AI 服务，Node 根据当前会话读取项目上下文并调用 Python。AI 的事项提取只生成候选草稿，用户确认后调用 record-batches/commit；情绪陪伴单独提供只读对话，均不直接修改数据库。供应商密钥只存在于 Python 服务配置中。语音采用 `qwen-audio-3.1-asr-flash`，确认免费额度和用完即停后启用；细节见根目录的 `AI接入说明.md`。正式账号可替换会话解析，业务仍只接受服务端确认的身份。
 
 ## V1.1 兼容与视图
 
@@ -65,3 +65,5 @@ garden_entity_links 是不可重复的身份绑定索引，以用户、绑定类
 浏览器偏好与业务事实分开：`lib/preferences.ts` 管理本机设置，项目分类单独随 Project 持久化，`features/settings/use-garden-preferences.ts` 应用主题和前台提醒。日签图片由前端根据真实成果和任务生成。AI 拆任务经过 Node 会话与项目归属校验，再调用 Python 结构化模型；用户确认之前不写入数据库。
 
 目标苹果由 `treeFruitsFor` 从 Goal 与 Result 派生，一目标一苹果，已摘取不再挂树；`fruitColorMix` 只负责连续色彩权重，成熟判定仍为 100%。`growthFor` 只按手动摘取的唯一目标计算成长；行动和待摘成熟果均不增加成长。`ProjectView` 不再把已摘取目标作为首页进度目标。树底图和苹果分层，所有页面共用 GardenVisuals；组件内部不写业务状态。
+
+情绪陪伴由 `features/emotions/EmotionPage.tsx`、`modules/ai/emotion.routes.ts`、Python `Bailian.emotions` 组成。Node 只读构造当前用户今日真实行动上下文，Python 负责有依据的陪伴回复，引用 ID 由两层校验；失败返回明确标注的基础陪伴，不自动重试模型。此路由没有 garden command 或事务写入。会话仅在页面内存中，模型最多接收最近 10 条上下文。`packages/domain/record-intent.ts` 提供保守的纯情绪整句识别，供分类边界、手动整理和旧误记上下文过滤共用；其他表达仍由模型进行语义分类，不用关键词命中直接吞掉具体行动。所有新增接口合同集中在 packages/contracts/src/ai.ts。

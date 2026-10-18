@@ -30,6 +30,7 @@ export const projectAnalysisSchema = z.object({
     .max(20),
 });
 export const recordAnalysisSchema = z.object({
+  emotion_text: z.string().trim().min(1).max(2000).nullable().default(null),
   items: z
     .array(
       z.object({
@@ -76,3 +77,34 @@ export const taskPlanSchema = z.object({
     .min(1)
     .max(6),
 });
+
+export const emotionMessageSchema = z.object({
+  role: z.enum(['user', 'assistant']),
+  content: z.string().trim().min(1).max(2000),
+});
+export const emotionChatInputSchema = z.object({
+  text: z.string().trim().min(1).max(2000),
+  history: z.array(emotionMessageSchema).max(10).default([]),
+});
+export const emotionReplySchema = z.object({
+  reply: z.string().trim().min(1).max(600),
+  referenced_action_ids: z.array(z.string().min(1).max(100)).max(6),
+});
+export const emotionChatSchema = emotionReplySchema.extend({
+  mode: z.enum(['ai', 'fallback']),
+  today: z.object({
+    date: z.iso.date(),
+    action_count: z.number().int().nonnegative(),
+    actions: z
+      .array(
+        z.object({
+          id: z.string().min(1).max(100),
+          content: z.string().min(1).max(2000),
+          project_name: z.string().max(200).nullable(),
+        }),
+      )
+      .max(6),
+  }),
+});
+export type EmotionMessage = z.infer<typeof emotionMessageSchema>;
+export type EmotionChat = z.infer<typeof emotionChatSchema>;

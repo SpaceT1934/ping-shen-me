@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from .config import Settings
-from .models import AudioRequest, ProjectRequest, RecordRequest, ReportRequest, FeedbackRequest, TaskPlanRequest
+from .models import AudioRequest, ProjectRequest, RecordRequest, ReportRequest, FeedbackRequest, TaskPlanRequest, EmotionRequest
 from .provider import Bailian, ServiceError
 
 
@@ -78,6 +78,10 @@ def create_app(settings=None, provider=None):
     @app.post("/internal/v1/tasks/plan", dependencies=[Depends(authorize)])
     def task_plan(body: TaskPlanRequest):
         return provider.plan(body)
+
+    @app.post("/internal/v1/emotions/respond", dependencies=[Depends(authorize)])
+    def emotions(body: EmotionRequest):
+        return provider.emotions(body)
 
     @app.post("/internal/v1/asr/transcribe", dependencies=[Depends(authorize)])
     def transcribe(body: AudioRequest):

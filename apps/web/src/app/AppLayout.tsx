@@ -23,6 +23,7 @@ export function AppLayout() {
     '/fruit',
     '/share',
     '/quiz',
+    '/feelings',
   ].includes(pathname);
   return (
     <div

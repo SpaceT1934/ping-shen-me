@@ -98,6 +98,12 @@ export const router = createBrowserRouter([
       { path: '/growth', element: <GrowthPage /> },
       { path: '/fruit', element: <FruitPage /> },
       { path: '/records', element: <RecordsPage /> },
+      {
+        path: '/feelings',
+        lazy: async () => ({
+          Component: (await import('../features/emotions/EmotionPage')).EmotionPage,
+        }),
+      },
       { path: '/reports', element: <ReportsPage /> },
       { path: '/settings', element: <SettingsPage /> },
       {

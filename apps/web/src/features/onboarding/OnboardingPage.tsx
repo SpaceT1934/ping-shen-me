@@ -17,9 +17,9 @@ export function WelcomePage() {
           <h1>苹什么</h1>
         </FigmaMotion>
         <FigmaMotion node="30:924" className="fig-welcome-tagline">
-          用行动，养大每一棵树
+          世界之大，
         </FigmaMotion>
-        {['把想做的事', '种成一棵棵树', '在每一次行动中', '慢慢长大～'].map((text, index) => (
+        {['我们【苹】什么', '过垂直人生'].map((text, index) => (
           <FigmaMotion
             node={`30:${925 + index}`}
             key={text}
